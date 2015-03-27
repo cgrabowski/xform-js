@@ -1,0 +1,31 @@
+{
+  "name": "xform-js",
+  "version": "0.1.0",
+  "description": "xform-js JavaScript linear algebra library.",
+  "author": "Christopher Grabowski",
+  "license": "MIT",
+  "main": "./xform.js",
+  "repository": "https://github.com/cgrabowski/xform-js",
+  "bugs": {
+    "url": "https://github.com/cgrabowski/xform-js/issues"
+  },
+  "scripts": {
+    "test": "node ./xform-test.js",
+    "minify": "uglifyjs xform.js --o xform.0.1.0.min.js --comments"
+  },
+  "devDependencies": {
+    "uglify-js": "2.4.x"
+  },
+  "keywords": [
+    "webgl",
+    "matrix",
+    "vector",
+    "quaternion",
+    "linear algebra",
+    "math",
+    "3D",
+    "WebGL"
+  ],
+  "analyze": "true"
+}
+
