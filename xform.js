@@ -3,7 +3,7 @@
  *
  * @author Christopher Grabowski - https://github.com/cgrabowski
  * @license MIT License
- * @version 0.1.0
+ * @version 0.0.1
  *
  * Copyright (c) 2015 Christopher Grabowski
  *
@@ -34,7 +34,7 @@ var xform = {};
   'use strict';
 
   // Set the exports property if this is a CommonJS environment (e.g., node.js)
-  if(typeof module !== 'undefined') {
+  if (typeof module !== 'undefined') {
     module.exports = xform;
   }
 
@@ -63,7 +63,7 @@ var xform = {};
    * @param the object that will gain xform's members
    */
   xform.usingNamespace = function(object) {
-    for(var prop in xform) {
+    for (var prop in xform) {
       Object.defineProperty(object, prop, {
         value: xform[prop],
         configurable: true,
@@ -78,7 +78,7 @@ var xform = {};
    */
   function Dimensional(dimensionality) {
     dimensionality = dimensionality || null;
-    if(typeof dimensionality === 'number') {
+    if (typeof dimensionality === 'number') {
       this.dim = new Dimensions([dimensionality]);
     } else if (dimensionality instanceof Array) {
       this.dim = new Dimensions(dimensionality);
@@ -93,12 +93,12 @@ var xform = {};
 
   Dimensional.prototype.equals = function(array) {
     if (array instanceof Dimensional) {
-      if(this.dim.equals(array.dim) && arrayIndexedEntriesEqual(this, array)) {
+      if (this.dim.equals(array.dim) && arrayIndexedEntriesEqual(this, array)) {
         return true;
       } else {
         return false;
       }
-    } else if(array instanceof Array) {
+    } else if (array instanceof Array) {
       if (arrayIndexedEntriesEqual(this, array)) {
         return true;
       } else {
@@ -117,9 +117,9 @@ var xform = {};
 
   function Dimensions(arrayOrNumber) {
     arrayOrNumber = arrayOrNumber || null;
-    if(typeof arrayOrNumber === 'number') {
+    if (typeof arrayOrNumber === 'number') {
       this.push(arrayOrNumber);
-    } else if(arrayOrNumber instanceof Array) {
+    } else if (arrayOrNumber instanceof Array) {
       for (var i = 0, len = arrayOrNumber.length; i < len; ++i) {
         this.push(arrayOrNumber[i]);
       }
@@ -132,13 +132,13 @@ var xform = {};
   Dimensions.prototype = Object.create(Array.prototype);
   Dimensions.prototype.constructor = Dimensions;
 
-  Dimensions.prototype.equals = function (dimensionsObj) {
+  Dimensions.prototype.equals = function(dimensionsObj) {
     return arrayIndexedEntriesEqual(this, dimensionsObj);
   };
 
   Dimensions.prototype.set = function(array) {
     this.length = array.length;
-    for(var i = 0, len = array.length; i < len; ++i) {
+    for (var i = 0, len = array.length; i < len; ++i) {
       this[i] = array[i];
     }
     return this;
@@ -150,13 +150,13 @@ var xform = {};
   function Vector(dimOrArray) {
     var dimension = (dimOrArray instanceof Array) ? dimOrArray.length : dimOrArray;
     Dimensional.call(this, dimension);
-    if(typeof dimOrArray === 'number') {
-      for(var i = 0; i < dimOrArray; ++i) {
+    if (typeof dimOrArray === 'number') {
+      for (var i = 0; i < dimOrArray; ++i) {
         this.push(0);
       }
-    } else if (dimOrArray instanceof Array){
+    } else if (dimOrArray instanceof Array) {
       var len = dimOrArray.length;
-      for(var i = 0; i < len; ++i) {
+      for (var i = 0; i < len; ++i) {
         this.push(dimOrArray[i]);
       }
     } else {
@@ -168,23 +168,23 @@ var xform = {};
   Vector.prototype.constructor = Vector;
 
   Vector.copy = function(vector, out) {
-    if(out == null) {
+    if (out == null) {
       out = new Vector(vector);
     } else {
       var len = vector.length;
       out.length = len;
-      for(var i = 0; i < len; ++i) {
+      for (var i = 0; i < len; ++i) {
         out[i] = vector[i];
       }
     }
     return out;
   };
 
-  Vector.flatten = function (arrayOfVectors, arrayType) {
+  Vector.flatten = function(arrayOfVectors, arrayType) {
     var arr = arrayOfVectors.reduce(function(sum, ele) {
       return sum.concat(ele.toArray());
     }, []);
-    if(arrayType === Array) {
+    if (arrayType === Array) {
       return arr;
     } else {
       return new arrayType(arr);
@@ -195,22 +195,22 @@ var xform = {};
     dimCheck(vec1, vec2);
     var out = 0;
     var len = vec1.length;
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       out += vec1[i] * vec2[i];
     }
     return out;
   };
 
   Vector.cross = function(vec1, vec2, out) {
-    if(vec1.length !== 3 || vec2.length !== 3) {
+    if (vec1.length !== 3 || vec2.length !== 3) {
       throw new DimensionError("Cross product is only defined for three-dimensional vectors.");
     }
-    if(out == null) {
+    if (out == null) {
       out = new Vector(3);
     }
     out.set(vec1[1] * vec2[2] - vec1[2] * vec2[1],
-            vec1[2] * vec2[0] - vec1[0] * vec2[2],
-            vec1[0] * vec2[1] - vec1[1] * vec2[0]);
+      vec1[2] * vec2[0] - vec1[0] * vec2[2],
+      vec1[0] * vec2[1] - vec1[1] * vec2[0]);
     return out;
   };
 
@@ -219,7 +219,7 @@ var xform = {};
     dimCheck(vec1, vec2);
     var out = 0;
     var len = vec1.length;
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       out += vec1[i] * vec2[i];
     }
     return out;
@@ -237,21 +237,21 @@ var xform = {};
     return Math.sqrt(Vector.quadrance(this));
   };
 
-  Vector.prototype.add = function (vector) {
+  Vector.prototype.add = function(vector) {
     dimCheck(this, vector);
     var len = this.length;
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       this[i] += vector[i];
     }
     return this;
   };
 
   Vector.prototype.scale = function(scalar) {
-    if(typeof scalar !== 'number') {
+    if (typeof scalar !== 'number') {
       throw new TypeError("argument to Vector.scale must be of type number.");
     }
     var len = this.length;
-    for(var i = 0; i <len; ++i) {
+    for (var i = 0; i < len; ++i) {
       this[i] *= scalar;
     }
     return this;
@@ -259,11 +259,11 @@ var xform = {};
 
   Vector.prototype.set = function(arrayOrVarargs) {
     var vals = (arguments.length === 1) ? arguments[0] : arguments;
-    if(vals.length == null) {
+    if (vals.length == null) {
       vals = [vals];
     }
     dimCheck(this, vals);
-    for(var i = 0, len = this.length; i < len; ++i) {
+    for (var i = 0, len = this.length; i < len; ++i) {
       this[i] = vals[i];
     }
     return this;
@@ -271,7 +271,7 @@ var xform = {};
 
   Vector.prototype.normalize = function() {
     var mag = this.magnitude();
-    for(var i = 0, len = this.length; i < len; ++i) {
+    for (var i = 0, len = this.length; i < len; ++i) {
       this[i] /= mag;
     }
     return this;
@@ -299,11 +299,11 @@ var xform = {};
     m = m || 4;
     n = n || 4;
     this.dim = new Dimensions([m, n]);
-    for(var i = 0; i < m; ++i)
-      for(var j = 0; j < n; ++j) {
-        if(i === j) {
+    for (var i = 0; i < m; ++i)
+      for (var j = 0; j < n; ++j) {
+        if (i === j) {
           this.push(1);
-        }else {
+        } else {
           this.push(0);
         }
       }
@@ -315,13 +315,13 @@ var xform = {};
   Matrix.cache2 = new Matrix(4, 4);
 
   // supports all (compatible) dimensionality
-  Matrix.mul = function(mat1, mat2, out){
+  Matrix.mul = function(mat1, mat2, out) {
     var m1, m2, n1, n2;
 
     m1 = mat1.dim[0];
     n1 = mat1.dim[1];
 
-    if(mat2 instanceof Matrix) {
+    if (mat2 instanceof Matrix) {
       m2 = mat2.dim[0];
       n2 = mat2.dim[1];
     } else {
@@ -329,11 +329,11 @@ var xform = {};
       n2 = 1;
     }
 
-    if(n1 !== m2) {
+    if (n1 !== m2) {
       throw new DimensionError('left matrix n = ' + n1 + ', right matrix m = ' + m2);
     }
 
-    if(out == null) {
+    if (out == null) {
       out = new Matrix(m1, n2);
       out.zero();
     } else {
@@ -341,37 +341,182 @@ var xform = {};
       out.zero();
     }
 
-    for(var i = 0; i < m1; ++i)
-      for(var j = 0; j < n2; ++j)
-        for(var e = 0; e < n1; ++e) {
+    for (var i = 0; i < m1; ++i)
+      for (var j = 0; j < n2; ++j)
+        for (var e = 0; e < n1; ++e) {
           out[j + n2 * i] += mat1[e + n1 * i] * mat2[n2 * e + j];
         }
     return out;
   };
 
   Matrix.copy = function(matrix, out) {
-    if(out == null) {
+    if (out == null) {
       out = new Matrix(matrix.dim[0], matrix.dim[1]);
     } else {
       out.dim = [matrix.dim[0], matrix.dim[1]];
     }
 
-    for(var i = 0; i < matrix.length; ++i) {
+    for (var i = 0; i < matrix.length; ++i) {
       out[i] = matrix[i];
     }
     return out;
   };
 
+  // TODO: this method must produce a permuation matrix
+  // when necessary
+  Matrix.lufac = function(matrix, lower, upper) {
+    if (typeof matrix === 'undefined') {
+      var msg = 'First argument to Matrix.lufac is undefined';
+      throw new ReferenceError(msg);
+    }
+    if (matrix.dim[0] !== matrix.dim[1]) {
+      var msg = 'Matrix.lufac requires a square matrix.';
+      throw new DimensionError(msg);
+    }
+
+    var mat = matrix;
+    var d = mat.dim[0];
+    if (typeof lower === 'undefined') {
+      lower = new Matrix(d, d);
+    } else {
+      lower.dim[0] = d;
+      lower.dim[1] = d;
+    }
+    if (typeof upper === 'undefined') {
+      upper = new Matrix(d, d);
+    } else {
+      upper.dim[0] = d;
+      upper.dim[1] = d;
+    }
+    var lo = lower;
+    var up = upper;
+
+    for (var i = 0; i < d; ++i) {
+      lo[i * d] = mat[i * d]
+      for (var j = 0; j < d; ++j) {
+        if (i > j) {
+          up[i * d + j] = 0;
+        } else if (i < j) {
+          lo[i * d + j] = 0;
+        } else {
+          up[i * d + j] = 1;
+        }
+      }
+    }
+
+    for (var j = 1; j < d; ++j)
+      for (var i = 0; i < d; ++i) {
+        if (i >= j) {
+          lo[i * d + j] = mat[i * d + j];
+
+          for (var k = 0; k < j; ++k) {
+            lo[i * d + j] -= lo[i * d + k] * up[k * d + j];
+          }
+        }
+
+        if (i < j) {
+          up[i * d + j] = mat[i * d + j];
+          for (var k = 0; k < i; ++k) {
+            up[i * d + j] -= lo[i * d + k] * up[k * d + j];
+          }
+          up[i * d + j] /= lo[i * d + i];
+        }
+    }
+    return [lower, upper];
+  };
+
+  Matrix.det = function(matrix) {
+    if (matrix.dim[0] !== matrix.dim[1]) {
+      var msg = 'determinant is only defined for square matrices';
+      throw new DimensionError(msg);
+
+    } else if (matrix.dim[0] == 2) {
+      return matrix[0] * matrix[3] - matrix[1] * matrix[2];
+    }
+
+    var d = matrix.dim[0];
+    var det = 0;
+
+    for (var j = 0; j < d; ++j) {
+      var md = matrix[j] * Matrix.det(Matrix.minor(matrix, 0, j));
+      det += (j % 2 === 0) ? md : -md;
+    } 
+
+    return det;
+  };
+
+  Matrix.invert = function(matrix, out) {
+    if (typeof matrix === 'undefined') {
+      var msg = 'First argument to Matrix.invert is undefined';
+      throw new ReferenceError(msg);
+    }
+    if (matrix.dim[0] !== matrix.dim[1]) {
+      var msg = 'Matrix.invert requires a square matrix.';
+      throw new DimensionError(msg);
+    }
+    if (Matrix.det(matrix) === 0) {
+      var msg = 'Cannot invert a singular matrix.';
+      throw new RangeError(msg);
+    }
+    var mat = matrix;
+    var d = mat.dim[0];
+    var det = 0;
+    out = out || new Matrix(d, d);
+    var minor = new Matrix(d - 1, d - 1);
+
+    for (var i = 0; i < d; ++i)
+      for (var j = 0; j < d; ++j) {
+        var ind = i * d + j;
+        out[ind] = Matrix.det(Matrix.minor(mat, i, j, minor));
+      if (i % 2 !== j % 2) {
+        out[ind] *= -1;
+      }
+      if (i === 0) {
+        det += mat[j] * out[ind];
+      }
+    }
+    for (var i = 0, len = mat.length; i < len; ++i) {
+      out[i] /= det;
+    }
+    return out.transpose();
+  };
+
+  Matrix.minor = function(matrix, di, dj, out) {
+    var m = matrix.dim[0];
+    var n = matrix.dim[1];
+    var arr = [];
+    if (typeof out === 'undefined') {
+      out = new Matrix(m - 1, n - 1);
+    } else {
+      out.dim[0] = m - 1;
+      out.dim[1] = n - 1;
+    }
+
+    row: for (var i = 0; i < m; ++i) {
+      col: for (var j = 0; j < n; ++j) {
+        if (i === di) {
+          continue row;
+        }
+        if (j === dj) {
+          continue col;
+        } 
+
+        arr.push(matrix[i * m + j]);
+      }
+    }
+    return out.set(arr);
+  };
+
   Matrix.prototype.set = function(array) {
     var len = this.length;
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       this[i] = array[i];
     }
     return this;
   };
 
   Matrix.prototype.setEntry = function(m, n, val) {
-    this[n -1 + (m - 1) * this.dim[1]] = val;
+    this[n - 1 + (m - 1) * this.dim[1]] = val;
     return this;
   };
 
@@ -381,8 +526,8 @@ var xform = {};
     var m = this.dim[0];
     var n = this.dim[1];
 
-    for(var i = 0; i < m; ++i)
-      for(var j = 0; j < n; ++j) {
+    for (var i = 0; i < m; ++i)
+      for (var j = 0; j < n; ++j) {
         this[j + i * n] = (i === j) ? 1 : 0;
       }
     return this;
@@ -391,7 +536,7 @@ var xform = {};
   // suuports all dimensions
   Matrix.prototype.zero = function() {
     var len = this.dim[0] * this.dim[1];
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       this[i] = 0;
     }
     return this;
@@ -403,7 +548,7 @@ var xform = {};
     var n1 = this.dim[1];
     var m2, n2;
 
-    if(matrix instanceof Matrix) {
+    if (matrix instanceof Matrix) {
       m2 = matrix.dim[0];
       n2 = matrix.dim[1];
     } else {
@@ -414,20 +559,20 @@ var xform = {};
     var cache = Matrix.cache1;
     cache.dim.set(this.dim);
 
-    if(n1 !== m2) {
+    if (n1 !== m2) {
       throw new DimensionError('this matrix n = ' + n1 + ', other matrix m = ' + m2);
     }
 
-    for(var i = 0, len = this.length; i < len; ++i) {
+    for (var i = 0, len = this.length; i < len; ++i) {
       cache[i] = this[i];
       this[i] = 0;
     }
 
     this.dim.set(matrix.dim);
 
-    for(var i = 0; i < m1; ++i)
-      for(var j = 0; j < n2; ++j)
-        for(var e = 0; e < n1; ++e) {
+    for (var i = 0; i < m1; ++i)
+      for (var j = 0; j < n2; ++j)
+        for (var e = 0; e < n1; ++e) {
           this[j + n2 * i] += cache[e + n1 * i] * matrix[n2 * e + j];
         }
     return this;
@@ -442,13 +587,13 @@ var xform = {};
 
     cache.dim.set([m, n]);
 
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       cache[i] = this[i];
     }
 
     this.dim.set([n, m]);
-    for(var i = 0; i < m; ++i)
-      for(var j = 0; j < n; ++j) {
+    for (var i = 0; i < m; ++i)
+      for (var j = 0; j < n; ++j) {
         this[i + m * j] = cache[j + i * n];
       }
     return this;
@@ -457,7 +602,7 @@ var xform = {};
   // must be 4x4 matrix
   Matrix.prototype.asView = function(position) {
     position = position || [0, 0, 0];
-    if(!(position instanceof Array)) {
+    if (!(position instanceof Array)) {
       throw new TypeError('position argument to asView must be an instance of Array');
     }
     this.dim.set([4, 4]);
@@ -470,13 +615,13 @@ var xform = {};
 
   // must be 4x4 matrix
   Matrix.prototype.asOrthographic = function(left, right, bottom, top, near, far) {
-    if(right - left === 0) {
+    if (right - left === 0) {
       throw new RangeError('asOrthographic: right and left cannot have the same value');
     }
-    if(top - bottom === 0) {
+    if (top - bottom === 0) {
       throw new RangeError('asOrthographic: top and bottom cannot have the same value');
     }
-    if(far - near === 0) {
+    if (far - near === 0) {
       throw new RangeError('asOrthographic: far and near cannot have the same value');
     }
 
@@ -495,10 +640,10 @@ var xform = {};
 
   // must be 4x4 matrix
   Matrix.prototype.asPerspective = function(near, far, aspect, fov) {
-    if(far - near === 0) {
+    if (far - near === 0) {
       throw new RangeError('asPerspective: near and far cannot have the same value.');
     }
-    if(aspect === 0) {
+    if (aspect === 0) {
       throw new RangeError('asPerspective: aspect cannot equal zero.');
     }
     near = (near === 0) ? Number.MIN_VALUE : near;
@@ -527,7 +672,7 @@ var xform = {};
     var y = axis[1];
     var z = axis[2];
 
-    if(x === 0 && y === 0 && z === 0) {
+    if (x === 0 && y === 0 && z === 0) {
       throw new RangeError('rotation: axis cannot be the zero vector');
     }
 
@@ -564,12 +709,12 @@ var xform = {};
     var m = this.dim[0];
     var n = this.dim[1];
     var len = vector.length;
-    if(m - 1 !== len) {
+    if (m - 1 !== len) {
       var msg = 'translate: argument length must be one less than the number of rows in this matrix';
       throw new DimensionError();
     }
     this.identity();
-    for(var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
       this[(i + 1) * n - 1] = vector[i];
     }
     return this;
@@ -581,16 +726,16 @@ var xform = {};
     var m = this.dim[0];
     var n = this.dim[1];
 
-    if(typeof arrayOrScalar === 'number') {
-      for(var i = 0; i < m -1 ; ++i) {
+    if (typeof arrayOrScalar === 'number') {
+      for (var i = 0; i < m - 1; ++i) {
         this[i + i * n] = arrayOrScalar;
       }
     } else {
-      if(arrayOrScalar.length !== m - 1) {
+      if (arrayOrScalar.length !== m - 1) {
         var msg = 'scale: array argument length must be one minus the number of rows in this.';
         throw new RangeError(msg);
       }
-      for(var i = 0; i < m - 1; ++i) {
+      for (var i = 0; i < m - 1; ++i) {
         this[i + i * n] = arrayOrScalar[i];
       }
     }
@@ -620,16 +765,16 @@ var xform = {};
     var n = this.dim[1];
 
     for (var i = 0; i < m; ++i) {
-      if(i !== 0) {
+      if (i !== 0) {
         str += ' ';
       }
-      for(var j = 0; j < n; ++j) {
+      for (var j = 0; j < n; ++j) {
         str += this[j + i * n];
-        if(j !== n - 1) {
+        if (j !== n - 1) {
           str += ' ';
         }
       }
-      if(i !== m - 1) {
+      if (i !== m - 1) {
         str += '\n';
       }
     }
@@ -648,7 +793,7 @@ var xform = {};
   Quaternion.cache1 = new Vector(3);
   Quaternion.cache2 = new Vector(3);
 
-  Quaternion.mul = function(q1, q2, out)  {
+  Quaternion.mul = function(q1, q2, out) {
     out = out || new Quaternion();
 
     var t1 = q1.t;
@@ -728,10 +873,10 @@ var xform = {};
   };
 
   Quaternion.prototype.setAxisAngle = function(axis, angle) {
-    if(!(axis instanceof Array)) {
+    if (!(axis instanceof Array)) {
       throw new TypeError('axis argument to setAxisAngle must be an instance of Array');
     }
-    if(typeof angle !== 'number') {
+    if (typeof angle !== 'number') {
       throw new TypeError('angle argument to SetAxisAngle must be of type Number');
     }
 
@@ -741,7 +886,7 @@ var xform = {};
   };
 
   Quaternion.prototype.toMatrix = function() {
-    var mat =  new Matrix();
+    var mat = new Matrix();
     var theta = Math.acos(this.t) * 2;
     var x = this.v[0];
     var y = this.v[1];
@@ -752,7 +897,7 @@ var xform = {};
     mat[0] = cos(theta) + x * x * (1 - cos(theta));
     mat[1] = x * y * (1 - cos(theta)) - z * sin(theta);
     mat[2] = x * z * (1 - cos(theta)) + y * sin(theta);
-    mat[4] = y * x (1 - cos(theta)) + z * sin(theta);
+    mat[4] = y * x(1 - cos(theta)) + z * sin(theta);
     mat[5] = cos(theta) + y * y * (1 - cos(theta));
     mat[6] = y * z * (1 - cos(theta)) - x * sin(theta);
     mat[8] = z * x * (1 - cos(theta)) - y * sin(theta);
@@ -770,7 +915,7 @@ var xform = {};
   };
 
   Quaternion.prototype.toString = function() {
-    return 'r: ' + this.t + ', i: [ ' + this.v[0] + ', ' +this.v[1] + ', ' + this.v[2] + ' ]';
+    return 'r: ' + this.t + ', i: [ ' + this.v[0] + ', ' + this.v[1] + ', ' + this.v[2] + ' ]';
   };
 
   /*
@@ -819,8 +964,8 @@ var xform = {};
   /**
    * @name DimensionError^2
    */
-  function DimensionError(obj1, obj2){
-    if(typeof obj1 === 'string') {
+  function DimensionError(obj1, obj2) {
+    if (typeof obj1 === 'string') {
       this.message = obj1;
       this.dims = new Dimensions([null]);
     } else {
@@ -829,7 +974,7 @@ var xform = {};
       var d1;
 
       var d2;
-      if(obj1.dim != null) {
+      if (obj1.dim != null) {
         d1 = obj1.dim;
       } else if (obj1 instanceof Array) {
         d1 = obj1.length;
@@ -839,7 +984,7 @@ var xform = {};
         d1 = [null];
       }
 
-      if(obj2.dim != null) {
+      if (obj2.dim != null) {
         d2 = obj2.dim;
       } else if (obj2 instanceof Array) {
         d2 = obj2.length;
@@ -854,10 +999,10 @@ var xform = {};
         return this[0].equals(array[0]) && this[1].equals(array[1]);
       };
 
-      if(this.dims[0][0] === null) {
+      if (this.dims[0][0] === null) {
         d1 = 'null';
       }
-      if(this.dims[1][0] === null) {
+      if (this.dims[1][0] === null) {
         d2 = 'null';
       }
 
@@ -889,7 +1034,7 @@ var xform = {};
     var toString = Object.prototype.toString;
 
     // determine if arr1 and arr2 are array-like
-    if(!(arr1 instanceof Array) && !/Array/.test(toString.call(arr1))) {
+    if (!(arr1 instanceof Array) && !/Array/.test(toString.call(arr1))) {
       return false;
     } else if (!(arr2 instanceof Array) && !/Array/.test(toString.call(arr2))) {
       return false;
@@ -907,4 +1052,3 @@ var xform = {};
     return true;
   }
 }());
-
