@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "node ./xform-test.js",
-    "minify": "uglifyjs xform.js --o xform.0.0.1.min.js --comments"
+    "minify": "uglifyjs xform.js --o xform.0.0.1.min.js --preamble '// xform-js Copyright 2015 Christopher Grabowski https://github.com/cgrabowski MIT License'"
   },
   "devDependencies": {
     "uglify-js": "2.4.x"
