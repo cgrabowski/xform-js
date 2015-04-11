@@ -421,7 +421,7 @@ var xform = {};
           }
           up[i * d + j] /= lo[i * d + i];
         }
-    }
+      }
     return [lower, upper];
   };
 
@@ -430,17 +430,36 @@ var xform = {};
       var msg = 'determinant is only defined for square matrices';
       throw new DimensionError(msg);
 
-    } else if (matrix.dim[0] == 2) {
+    } else if (matrix.dim[0] === 2) {
       return matrix[0] * matrix[3] - matrix[1] * matrix[2];
+
+    } else if (matrix.dim[0] === 3) {
+      var m = matrix;
+      var x = m[0] * (m[4] * m[8] - m[5] * m[7]);
+      var y = m[1] * (m[3] * m[8] - m[5] * m[6]);
+      var z = m[2] * (m[3] * m[7] - m[4] * m[6]);
+      return x - y + z;
+
+    } else if (matrix.dim[0] === 4) {
+      var m = matrix;
+      var xy = m[8] * m[13] - m[9] * m[12];
+      var xz = m[8] * m[14] - m[10] * m[12];
+      var xw = m[8] * m[15] - m[11] * m[12];
+      var yz = m[9] * m[14] - m[10] * m[13];
+      var yw = m[9] * m[15] - m[11] * m[13];
+      var zw = m[10] * m[15] - m[11] * m[14];
+      var x = m[0] * (m[5] * zw - m[6] * yw + m[7] * yz);
+      var y = m[1] * (m[4] * zw - m[6] * xw + m[7] * xz);
+      var z = m[2] * (m[4] * yw - m[5] * xw + m[7] * xy);
+      var w = m[3] * (m[4] * yz - m[5] * xz + m[6] * xy);
+      return x - y + z - w;
     }
 
-    var d = matrix.dim[0];
     var det = 0;
-
-    for (var j = 0; j < d; ++j) {
+    for (var j = 0, d = matrix.dim[0]; j < d; ++j) {
       var md = matrix[j] * Matrix.det(Matrix.minor(matrix, 0, j));
       det += (j % 2 === 0) ? md : -md;
-    } 
+    }
 
     return det;
   };
@@ -454,27 +473,31 @@ var xform = {};
       var msg = 'Matrix.invert requires a square matrix.';
       throw new DimensionError(msg);
     }
-    if (Matrix.det(matrix) === 0) {
+    var det = Matrix.det(matrix);
+    if (det === 0) {
       var msg = 'Cannot invert a singular matrix.';
       throw new RangeError(msg);
     }
     var mat = matrix;
     var d = mat.dim[0];
-    var det = 0;
     out = out || new Matrix(d, d);
-    var minor = new Matrix(d - 1, d - 1);
+    var minor;
+    if (d < 6) {
+      minor = Matrix.cache1;
+      minor.dim[0] = d;
+      minor.dim[1] = d;
+    } else {
+      minor = new Matrix(d - 1, d - 1);
+    }
 
     for (var i = 0; i < d; ++i)
       for (var j = 0; j < d; ++j) {
         var ind = i * d + j;
         out[ind] = Matrix.det(Matrix.minor(mat, i, j, minor));
-      if (i % 2 !== j % 2) {
-        out[ind] *= -1;
+        if (i % 2 !== j % 2) {
+          out[ind] *= -1;
+        }
       }
-      if (i === 0) {
-        det += mat[j] * out[ind];
-      }
-    }
     for (var i = 0, len = mat.length; i < len; ++i) {
       out[i] /= det;
     }
@@ -499,7 +522,7 @@ var xform = {};
         }
         if (j === dj) {
           continue col;
-        } 
+        }
 
         arr.push(matrix[i * m + j]);
       }
