@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!-- Christopher Grabowski -->
+<!-- xform-js example -->
+<!-- 12 April 2015 -->
+<html>
+<head>
+<meta charset="UTF-8">
+<title>xform-js example</title>
+<style>
+body, button {
+  color: white;
+  background-color: black;
+}
+canvas {
+  border: none;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border: none;
+  pointer-events: none;
+}
+h4, div {
+  margin: 3px;
+}
+</style>
+</head>
+<body>
+<canvas width=1920 height=1080 id='gl-canvas'></canvas>
+<h4>xform-js example</h4>
+
+<script src="webgl-utils.js"></script>
+<script src="../xform.js"></script>
+<script src="example.js"></script>
+
+<script type="x-shader/x-vertex" id="phong-vertex-shader">
+
+  uniform mat3 uMV;
+  uniform mat4 uMVP;
+  uniform vec3 uLightPos;
+  uniform vec3 uCamPos;
+
+  attribute vec4 aPosition;
+  attribute vec3 aNormal;
+  attribute vec2 aUV;
+
+  varying vec3 vNormal;
+  varying vec3 vLightDir;
+  varying vec3 vCamDir;
+  varying vec2 vUV;
+
+  void main() {
+    vNormal = uMV * aNormal;
+    vLightDir = normalize(uLightPos - aPosition.xyz);
+    vCamDir = normalize(uCamPos - aPosition.xyz);
+    vUV = aUV;
+    gl_Position = uMVP * aPosition;
+  }
+
+</script>
+<script type="x-shader/x-fragment" id="phong-fragment-shader">
+
+  precision highp float;
+
+  uniform float uTime;
+  uniform sampler2D uText;
+  uniform vec3 uLightColor;
+  uniform float uShininess;
+
+  varying vec3 vNormal;
+  varying vec3 vLightDir;
+  varying vec3 vCamDir;
+  varying vec2 vUV;
+
+  void main() {
+    vec4 textColor = texture2D(uText, vec2(mod(vUV[0] + uTime, 1.0),
+    mod(vUV[1] + uTime, 1.0)));
+    float incidence = max(0.0, dot(vNormal, vLightDir));
+    vec3 dif = incidence * uLightColor * 2.0;
+    vec3 v = 2.0 * dot(-vNormal, vLightDir) * vNormal;
+    vec3 ref = vLightDir + v;
+    vec3 spec = pow(max(0.0, dot(ref, vCamDir)), uShininess) * uLightColor;
+    vec4 color = vec4(vec3(0.0, 0.0, textColor[2]) + dif + spec, 1.0);
+    gl_FragColor = color;
+  }
+
+</script>
+</body>
+</html>
+

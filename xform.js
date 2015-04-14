@@ -111,7 +111,7 @@ var xform = {};
       } else {
         type = array.constructor.name;
       }
-      throw new TypeError('Dimensional.equals expected instanceof Array but got + ' + type);
+      throw new TypeError('Dimensional.equals expected instanceof Array but got ' + type);
     }
   };
 
@@ -205,9 +205,12 @@ var xform = {};
     if (vec1.length !== 3 || vec2.length !== 3) {
       throw new DimensionError("Cross product is only defined for three-dimensional vectors.");
     }
-    if (out == null) {
+    if (typeof out === 'undefined') {
       out = new Vector(3);
+    } else if (!(out instanceof Vector)) {
+      throw new TypeError('out argument to Vector.cross must be a Vector or undefined.');
     }
+
     out.set(vec1[1] * vec2[2] - vec1[2] * vec2[1],
       vec1[2] * vec2[0] - vec1[0] * vec2[2],
       vec1[0] * vec2[1] - vec1[1] * vec2[0]);
@@ -480,7 +483,12 @@ var xform = {};
     }
     var mat = matrix;
     var d = mat.dim[0];
-    out = out || new Matrix(d, d);
+    if (typeof out === 'undefined') {
+      out = new Matrix(d, d);
+    } else {
+      out.dim[0] = mat.dim[0];
+      out.dim[1] = mat.dim[1];
+    }
     var minor;
     if (d < 6) {
       minor = Matrix.cache1;
@@ -599,6 +607,14 @@ var xform = {};
           this[j + n2 * i] += cache[e + n1 * i] * matrix[n2 * e + j];
         }
     return this;
+  };
+
+  Matrix.prototype.invert = function() {
+    var cache = Matrix.cache2;
+    cache.dim[0] = this.dim[0];
+    cache.dim[1] = this.dim[1];
+    cache.set(this);
+    return Matrix.invert(cache, this);
   };
 
   // supports all dimensions
@@ -812,85 +828,124 @@ var xform = {};
     this.v = new Vector(3);
     this.dim = new Dimensions(4);
   }
+  Quaternion.prototype = Object.create(Dimensional.prototype);
+  Quaternion.prototype.constructor = Quaternion;
+  Quaternion.prototype.equals = function(quaternion) {
+    return (this.t === quaternion.t && this.v.equals(quaternion.v));
+  };
 
-  Quaternion.cache1 = new Vector(3);
-  Quaternion.cache2 = new Vector(3);
+  Quaternion.cache1 = new Quaternion(4);
+  Quaternion.cache2 = new Quaternion(4);
 
   Quaternion.mul = function(q1, q2, out) {
     out = out || new Quaternion();
+    var q1V = q1.v;
+    var q2V = q2.v;
+    var outV = out.v;
+    var w = q1.t;
+    var x = q1V[0];
+    var y = q1V[1];
+    var z = q1V[2];
+    var ow = q2.t;
+    var ox = q2V[0];
+    var oy = q2V[1];
+    var oz = q2V[2];
 
-    var t1 = q1.t;
-    var v1 = q1.v;
-    var t2 = q2.t;
-    var v2 = q2.v;
-
-    out.t = t1 * t2 - Vector.dot(v1, v2);
-    Vector.cross(v1, v2, out.v);
-    out.v[0] = t1 * v2[0] + t2 * v1[0];
-    out.v[1] = t1 * v2[1] + t2 * v1[1];
-    out.v[2] = t1 * v2[2] + t2 * v1[2];
-
-    t1 = out.t;
-    v1 = Quaternion.cache1.set(out.v);
-    t2 = q1.t;
-    v2 = Quaternion.cache2.set([-q1[0], -q1[1], -q2[2]]);
-
-    out.t = t1 * t2 - Vector.dot(v1, v2);
-    Vector.cross(v1, v2, out.v);
-    out.v[0] = t1 * v2[0] + t2 * v1[0];
-    out.v[1] = t1 * v2[1] + t2 * v1[1];
-    out.v[2] + t1 * v2[2] + t2 * v1[2];
+    out.t = w * ow - x * ox - y * oy - z * oz;
+    outV[0] = w * ox + x * ow + y * oz - z * oy;
+    outV[1] = w * oy - x * oz + y * ow + z * ox;
+    outV[2] = w * oz + x * oy - y * ox + z * ow;
 
     return out;
   };
 
+  Quaternion.invert = function(quaternion, out) {
+    out = out || new Quaternion();
+
+    var vin = quaterinon.v;
+    var vout = out.v;
+    var quad = quaternion.quadrance();
+    out.t = quaternion.t * invQuad;
+    vout[0] = -vin[0] / quad;
+    vout[1] = -vin[1] / quad;
+    vout[2] = -vin[2] / quad;
+
+    return out;
+  };
+
+  Quaternion.conjugate = function(qin, out) {
+    out = out || new Quaternion();
+    var vin = qin.v;
+    var vout = out.v;
+
+    out.t = qin.t;
+    vout[0] = -vin[0];
+    vout[1] = -vin[1];
+    vout[2] = -vin[2];
+
+    return out;
+  };
+
+  Quaternion.prototype.quadrance = function() {
+    var v = this.v;
+    return this.t * this.t + v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+  };
+
+  Quaternion.prototype.length = function() {
+    return Math.sqrt(this.quadrance());
+  };
+
+  Quaternion.prototype.invert = function() {
+    var v = this.v;
+    var quad = this.quadrance();
+    this.t /= quad;
+    v[0] /= -quad;
+    v[1] /= -quad;
+    v[2] /= -quad;
+    return this;
+  };
+
+  Quaternion.prototype.conjugate = function() {
+    this.v.scale(-1);
+    return this;
+  };
+
+  Quaternion.prototype.normalize = function() {
+    var len = this.length();
+
+    this.t /= len;
+    this.v.scale(1 / len);
+
+    return this;
+  };
+
   Quaternion.prototype.rotate = function(vector) {
-    var t1 = this.t;
-    var v1 = this.v;
-    var t2 = vector[3];
-    var v2 = Quaternion.cache1.set([vector[0], vector[1], vector[2]]);
-
-    vector[3] = t1 * t2 - Vector.dot(v1, v2);
-    Vector.cross(v1, v2, [vector[0], vector[1], vector[2]]);
-    vector[0] = t1 * v2[0] + t2 * v1[0];
-    vector[1] = t1 * v2[1] + t2 * v1[1];
-    vector[2] = t1 * v2[2] + t2 * v1[2];
-
-    t1 = vector[3];
-    v1 = Quaternion.cache1.set([vector[0], vector[1], vector[2]]);
-    t2 = this.t;
-    v2 = Quaternion.cache2.set([-this.v[0], -this.v[1], -this.v[2]]);
-
-    vector[3] = t1 * t2 - Vector.dot(v1, v2);
-    Vector.cross(v1, v2, [vector[0], vector[1], vector[2]]);
-    vector[0] = t1 * v2[0] + t2 * v1[0];
-    vector[1] = t1 * v2[1] + t2 * v1[1];
-    vector[2] = t1 * v2[2] + t2 * v1[2];
-
+    var v = this.v;
+    var t = this.t;
+    var cx = Vector.cross(v, [vector[0], vector[1], vector[2]]).scale(2);
+    var cx2 = Vector.cross(v, cx);
+    vector[0] += t * cx[0] + cx2[0];
+    vector[1] += t * cx[1] + cx2[1];
+    vector[2] += t * cx[2] + cx2[2];
     return vector;
   };
 
   Quaternion.prototype.mul = function(quaternion) {
-    var t1 = quaternion.t;
-    var v1 = quaternion.v;
-    var t2 = this.t;
-    var v2 = Quaternion.cache1.set(this.v);
+    var thisV = this.v;
+    var otherV = quaternion.v;
+    var w = this.t;
+    var x = thisV[0];
+    var y = thisV[1];
+    var z = thisV[2];
+    var ow = quaternion.t;
+    var ox = otherV[0];
+    var oy = otherV[1];
+    var oz = otherV[2];
 
-    this.t = t1 * t2 - Vector.dot(v1, v2);
-    Vector.cross(v1, v2, this.v);
-    this.v[0] += t1 * v2[0] + t2 * v1[0];
-    this.v[1] += t1 * v2[1] + t2 * v1[1];
-    this.v[2] += t1 * v2[2] + t2 * v1[2];
-
-    t1 = this.t;
-    v1 = Quaternion.cache1.set(this.v);
-    t2 = quaternion.t;
-    v2 = Quaternion.cache2.set([-quaternion.v[0], -quaternion.v[1], -quaternion.v[2]]);
-
-    Vector.cross(v1, v2, this.v);
-    this.v[0] += t1 * v2[0] + t2 * v1[0];
-    this.v[1] += t1 * v2[1] + t2 * v1[1];
-    this.v[2] += t1 * v2[2] + t2 * v1[2];
+    this.t = w * ow - x * ox - y * oy - z * oz;
+    thisV[0] = w * ox + x * ow + y * oz - z * oy;
+    thisV[1] = w * oy - x * oz + y * ow + z * ox;
+    thisV[2] = w * oz + x * oy - y * ox + z * ow;
 
     return this;
   };
@@ -902,31 +957,55 @@ var xform = {};
     if (typeof angle !== 'number') {
       throw new TypeError('angle argument to SetAxisAngle must be of type Number');
     }
-
+    var len = Math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
     this.t = Math.cos(angle / 2);
-    this.v.set(axis).scale(Math.sin(angle / 2));
+    this.v.set(axis).scale(Math.sin(angle / 2) / len);
     return this;
   };
 
-  Quaternion.prototype.toMatrix = function() {
-    var mat = new Matrix();
-    var theta = Math.acos(this.t) * 2;
-    var x = this.v[0];
-    var y = this.v[1];
-    var z = this.v[2];
-    var cos = Math.cos;
-    var sin = Math.sin;
+  Quaternion.prototype.toMatrix = function(matrix) {
+    if (typeof matrix === 'undefined') {
+      matrix = new Matrix();
+    } else {
+      matrix.dim[0] = 4;
+      matrix.dim[1] = 4;
+      matrix.identity();
+    }
+    if (matrix.dim[0] !== 4 && matrix.dim[1] !== 4) {
+      var msg = 'argument to Quaternion.prototype.toMatrix must be undefined or a 4x4 matrix';
+      throw new DimensionError(msg);
+    }
 
-    mat[0] = cos(theta) + x * x * (1 - cos(theta));
-    mat[1] = x * y * (1 - cos(theta)) - z * sin(theta);
-    mat[2] = x * z * (1 - cos(theta)) + y * sin(theta);
-    mat[4] = y * x(1 - cos(theta)) + z * sin(theta);
-    mat[5] = cos(theta) + y * y * (1 - cos(theta));
-    mat[6] = y * z * (1 - cos(theta)) - x * sin(theta);
-    mat[8] = z * x * (1 - cos(theta)) - y * sin(theta);
-    mat[9] = z * y * (1 - cos(theta)) + x * sin(theta);
-    mat[10] = cos(theta) + z * z * (1 - cos(theta));
-    return mat;
+    var v = this.v;
+    var w = this.t;
+    var x = v[0];
+    var y = v[1];
+    var z = v[2];
+    var s = 2.0 / this.quadrance();
+    var xs = x * s;
+    var ys = y * s;
+    var zs = z * s;
+    var wx = w * xs;
+    var wy = w * ys;
+    var wz = w * zs;
+    var xx = x * xs;
+    var xy = x * ys;
+    var xz = x * zs;
+    var yy = y * ys;
+    var yz = y * zs;
+    var zz = z * zs;
+
+    matrix[0] = 1 - (yy + zz);
+    matrix[4] = xy + wz;
+    matrix[8] = xz - wy;
+    matrix[1] = xy - wz;
+    matrix[5] = 1 - (xx + zz);
+    matrix[9] = yz + wx;
+    matrix[2] = xz + wy;
+    matrix[6] = yz - wx;
+    matrix[10] = 1 - (xx + yy);
+
+    return matrix;
   };
 
   Quaternion.prototype.toTVArray = function() {
@@ -947,39 +1026,78 @@ var xform = {};
    */
   function OrthonormalBasis() {
     // binormal vector
-    this.cross = new Vector([1, 0, 0, 1]);
+    this.cross = new Vector([1, 0, 0]);
     // normal vector
-    this.up = new Vector([0, 1, 0, 1]);
+    this.up = new Vector([0, 1, 0]);
     // tangent vector
-    this.look = new Vector([0, 0, 1, 1]);
-    // prduct of all rotations over time
+    this.look = new Vector([0, 0, 1]);
+    // product of all rotations over time
     this.orientation = new Quaternion();
   }
   OrthonormalBasis.cache = new Quaternion();
 
+  OrthonormalBasis.toMatrix = function(basis, matrix) {
+    if (typeof matrix === 'undefined') {
+      matrix = new Matrix();
+    } else {
+      matrix.dim[0] = 4;
+      matrix.dim[1] = 4;
+    }
+    return basis.orientation.toMatrix(matrix);
+  };
+
   OrthonormalBasis.prototype.pitch = function(theta) {
     var cache = OrthonormalBasis.cache;
-    cache.setAxisAngle(this.cross, theta);
-    cache.rotate(up);
-    cache.rotate(look);
-    orientation.mul(cache);
+    cache.setAxisAngle(this.cross, -theta);
+    cache.rotate(this.up);
+    cache.rotate(this.look);
+    this.orientation.mul(cache);
+    this.orientation.normalize();
+    return this;
   }
 
   OrthonormalBasis.prototype.yaw = function(theta) {
-    var cache = OthonormalBasis.cache;
-    cache.setAxisAngle(up, theta);
-    cache.rotate(cross);
-    cache.rotate(look);
-    orientation.mul(cache);
+    var cache = OrthonormalBasis.cache;
+    cache.setAxisAngle(this.up, -theta);
+    cache.rotate(this.cross);
+    cache.rotate(this.look);
+    this.orientation.mul(cache);
+    this.orientation.normalize();
+    return this;
   }
 
   OrthonormalBasis.prototype.roll = function(theta) {
     var cache = OrthonormalBasis.cache;
-    cache.setAxisAngle(look, theta);
-    cache.rotate(cross);
-    cache.rotate(up);
-    orientation.mul(cache);
+    cache.setAxisAngle(this.look, -theta);
+    cache.rotate(this.cross);
+    cache.rotate(this.up);
+    this.orientation.mul(cache);
+    this.orientation.normalize();
+    return this;
   }
+
+  OrthonormalBasis.prototype.toMatrix = function(matrix) {
+    if (typeof Matrix === 'undefined') {
+      var msg = 'matrix argument to OrthonormalBasis.prototype.toMatrix must be defined. ';
+      msg += 'to create a new Matrix from this basis use OrthonormalBasis.toMatrix instead.';
+      throw new ReferenceError(msg);
+    }
+    matrix.dim[0] = 4;
+    matrix.dim[1] = 4;
+    return this.orientation.toMatrix(matrix);
+  };
+
+  OrthonormalBasis.prototype.rotate = function(matrix) {
+    var cache = Matrix.cache2;
+    cache.dim[0] = 4;
+    cache.dim[1] = 4;
+    this.toMatrix(cache)
+    return matrix.mul(cache);
+  };
+
+  OrthonormalBasis.prototype.toString = function() {
+    return this.cross.toString() + "\n " + this.up.toString() + "\n " + this.look.toString();
+  };
 
   /**
    * @name DimensionError
