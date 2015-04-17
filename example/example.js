@@ -76,7 +76,7 @@ window.onload = function() {
   torusModel2.asTranslation([10, 0, 0]);
 
   normalMat = new Matrix(3, 3);
-  torusRot = new OrthonormalBasis();
+  torusRot = new Attitude();
   quat = new Quaternion();
 
   light = new PointLight([0.0, 0.0, 10.0], [0.8, 0.4, 0.4]);

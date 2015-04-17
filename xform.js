@@ -46,7 +46,7 @@ var xform = {};
   xform.Vector = Vector;
   xform.Matrix = Matrix;
   xform.Quaternion = Quaternion;
-  xform.OrthonormalBasis = OrthonormalBasis;
+  xform.Attitude = Attitude;
   xform.DimensionError = DimensionError;
   xform.dimCheck = dimCheck;
   xform.arrayIndexedEntriesEqual = arrayIndexedEntriesEqual;
@@ -226,6 +226,12 @@ var xform = {};
       out += vec1[i] * vec2[i];
     }
     return out;
+  };
+
+  Vector.prototype.zero = function() {
+    for (var i = 0, len = this.length; i < len; ++i) {
+      this[i] = 0;
+    }
   };
 
   Vector.prototype.dot = function(vec) {
@@ -1020,84 +1026,105 @@ var xform = {};
     return 'r: ' + this.t + ', i: [ ' + this.v[0] + ', ' + this.v[1] + ', ' + this.v[2] + ' ]';
   };
 
-  /*
-   * Creates an orthonormal basis in R3 that can be used for quaterion
-   * rotations.
-   */
-  function OrthonormalBasis() {
-    // binormal vector
-    this.cross = new Vector([1, 0, 0]);
-    // normal vector
-    this.up = new Vector([0, 1, 0]);
-    // tangent vector
-    this.look = new Vector([0, 0, 1]);
-    // product of all rotations over time
-    this.orientation = new Quaternion();
-  }
-  OrthonormalBasis.cache = new Quaternion();
 
-  OrthonormalBasis.toMatrix = function(basis, matrix) {
+  /*
+   * Provides yaw, pitch, and roll attitude rotations.
+   *
+   * Uses a quaternion and orthagonal 3x3 matrix under the hood.
+   */
+  function Attitude() {
+    // lateral axis
+    this.cross = new Vector([1, 0, 0]);
+    // normal axis
+    this.up = new Vector([0, 1, 0]);
+    // longitudinal axis
+    this.look = new Vector([0, 0, 1]);
+  }
+  Attitude.cache = new Quaternion();
+
+  Attitude.toMatrix = function(attitude, matrix) {
     if (typeof matrix === 'undefined') {
       matrix = new Matrix();
-    } else {
-      matrix.dim[0] = 4;
-      matrix.dim[1] = 4;
     }
-    return basis.orientation.toMatrix(matrix);
+    matrix.identity();
+    var c = attitude.cross;
+    var u = attitude.up;
+    var l = attitude.look;
+
+    if (matrix.dim[0] === 3 && matrix.dim[1] === 3) {
+      matrix[0] = c[0];
+      matrix[1] = c[1];
+      matrix[2] = c[2];
+      matrix[3] = u[0];
+      matrix[4] = u[1];
+      matrix[5] = u[2];
+      matrix[6] = l[0];
+      matrix[7] = l[1];
+      matrix[8] = l[2];
+    } else if (matrix.dim[0] === 4 && matrix.dim[1] === 4) {
+      matrix[0] = c[0];
+      matrix[1] = c[1];
+      matrix[2] = c[2];
+      matrix[4] = u[0];
+      matrix[5] = u[1];
+      matrix[6] = u[2];
+      matrix[8] = l[0];
+      matrix[9] = l[1];
+      matrix[10] = l[2];
+    } else {
+      var msg = 'matrix argument to Attitude.toMatrix must be undefined or a 3x3 or 4x4 Matrix.';
+      throw new DimensionsEror(msg);
+    }
+
+    return matrix;
   };
 
-  OrthonormalBasis.prototype.pitch = function(theta) {
-    var cache = OrthonormalBasis.cache;
+  Attitude.prototype.pitch = function(theta) {
+    var cache = Attitude.cache;
     cache.setAxisAngle(this.cross, -theta);
     cache.rotate(this.up);
     cache.rotate(this.look);
-    this.orientation.mul(cache);
-    this.orientation.normalize();
     return this;
   }
 
-  OrthonormalBasis.prototype.yaw = function(theta) {
-    var cache = OrthonormalBasis.cache;
+  Attitude.prototype.yaw = function(theta) {
+    var cache = Attitude.cache;
     cache.setAxisAngle(this.up, -theta);
     cache.rotate(this.cross);
     cache.rotate(this.look);
-    this.orientation.mul(cache);
-    this.orientation.normalize();
     return this;
   }
 
-  OrthonormalBasis.prototype.roll = function(theta) {
-    var cache = OrthonormalBasis.cache;
+  Attitude.prototype.roll = function(theta) {
+    var cache = Attitude.cache;
     cache.setAxisAngle(this.look, -theta);
     cache.rotate(this.cross);
     cache.rotate(this.up);
-    this.orientation.mul(cache);
-    this.orientation.normalize();
     return this;
   }
 
-  OrthonormalBasis.prototype.toMatrix = function(matrix) {
+  Attitude.prototype.toMatrix = function(matrix) {
     if (typeof Matrix === 'undefined') {
-      var msg = 'matrix argument to OrthonormalBasis.prototype.toMatrix must be defined. ';
-      msg += 'to create a new Matrix from this basis use OrthonormalBasis.toMatrix instead.';
+      var msg = 'matrix argument to Attitude.prototype.toMatrix must be defined. ';
+      msg += 'to create a new Matrix from this attitude use Attitude.toMatrix instead.';
       throw new ReferenceError(msg);
     }
-    matrix.dim[0] = 4;
-    matrix.dim[1] = 4;
-    return this.orientation.toMatrix(matrix);
+    return Attitude.toMatrix(this, matrix);
   };
 
-  OrthonormalBasis.prototype.rotate = function(matrix) {
+  Attitude.prototype.rotate = function(matrix) {
     var cache = Matrix.cache2;
-    cache.dim[0] = 4;
-    cache.dim[1] = 4;
-    this.toMatrix(cache)
+    cache.dim[0] = matrix.dim[0];
+    cache.dim[1] = matrix.dim[1];
+    this.toMatrix(cache);
+
     return matrix.mul(cache);
   };
 
-  OrthonormalBasis.prototype.toString = function() {
+  Attitude.prototype.toString = function() {
     return this.cross.toString() + "\n " + this.up.toString() + "\n " + this.look.toString();
   };
+
 
   /**
    * @name DimensionError

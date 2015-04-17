@@ -9,7 +9,7 @@ The Constructors provided by xform-js are:
 * Vector
 * Matrix
 * Quaternion
-* OrthonormalBasis
+* Attitude
 * DimensionError
 
 as well as the general specifying Constructors:

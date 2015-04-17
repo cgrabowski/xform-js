@@ -74,7 +74,7 @@ assert(Dimensions === xform.Dimensions);
 assert(Vector === xform.Vector);
 assert(Matrix === xform.Matrix);
 assert(Quaternion === xform.Quaternion);
-assert(OrthonormalBasis === xform.OrthonormalBasis);
+assert(Attitude === Attitude);
 assert(DimensionError === xform.DimensionError);
 assert(dimCheck === xform.dimCheck);
 assert(arrayIndexedEntriesEqual === xform.arrayIndexedEntriesEqual);
@@ -950,14 +950,15 @@ assert(Math.round(obj2[8] * 1000000) / 1000000 === 0.304533);
 assert(Math.round(obj2[9] * 1000000) / 1000000 === 0.209963);
 assert(Math.round(obj2[10] * 1000000) / 1000000 === 0.929072);
 
+
 /* * * * * * * * * * * * *
  *
- * OrthonormalBasis tests
+ * Attitude tests
  *
  * * * * * * * * * * * * */
 
-// OrthonormalBasis.pitch
-obj1 = new OrthonormalBasis();
+// Attitude.pitch
+obj1 = new Attitude();
 obj1.pitch(Math.PI / 4);
 assert(obj1.cross.equals([1, 0, 0]));
 assert(obj1.up.equals([0, Math.sin(Math.PI / 4), -Math.cos(Math.PI / 4)]));
@@ -971,7 +972,7 @@ assert(obj1.look[0] === 0);
 assert(Math.round(obj1.look[1] * 1000000) / 1000000 === 1);
 assert(obj1.look[2] === 0);
 
-// OrthonormalBasis.yaw
+// Attitude.yaw
 obj1.yaw(Math.PI / 6).yaw(-Math.PI / 6);
 assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 1);
 assert(Math.round(obj1.cross[1] * 1000000) / 1000000 === 0);
@@ -983,7 +984,7 @@ assert(Math.round(obj1.look[0] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.look[1] * 1000000) / 1000000 === 1);
 assert(obj1.look[2] === 0);
 
-// OrthonormalBasis.roll
+// Attitude.roll
 obj1.roll(Math.PI / 2);
 assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.cross[1] * 1000000) / 1000000 === 0);
@@ -995,12 +996,12 @@ assert(Math.round(obj1.look[0] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.look[1] * 1000000) / 1000000 === 1);
 assert(Math.round(obj1.look[2] * 1000000) / 1000000 === 0);
 
-// OrthonormalBasis.toMatrix
+// Attitude.toMatrix
 obj2 = new Matrix();
 obj1.toMatrix(obj2);
 obj1 = new Matrix();
-obj1.asRotation([0, 1, 0], Math.PI / 2);
-obj1.rotate([1, 0, 0], Math.PI / 2);
+obj1.asRotation([0, 1, 0], -Math.PI / 2);
+obj1.rotate([1, 0, 0], -Math.PI / 2);
 obj1.mul(obj2);
 for (var i = 0; i < 4; ++i)
   for (var j = 0; j < 4; ++j) {
@@ -1011,15 +1012,15 @@ for (var i = 0; i < 4; ++i)
     }
   }
 
-// OrthonormalBasis.rotate
-obj1 = new OrthonormalBasis();
+// Attitude.rotate
+obj1 = new Attitude();
 obj1.roll(Math.PI / 2);
 obj1.yaw(Math.PI / 2);
 obj2 = new Matrix();
 obj1.rotate(obj2);
 obj1 = new Matrix();
-obj1.asRotation([1, 0, 0], Math.PI / 2);
-obj1.rotate([0, 0, 1], Math.PI / 2);
+obj1.asRotation([1, 0, 0], -Math.PI / 2);
+obj1.rotate([0, 0, 1], -Math.PI / 2);
 obj1.mul(obj2);
 for (var i = 0; i < 4; ++i)
   for (var j = 0; j < 4; ++j) {
