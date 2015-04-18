@@ -1,7 +1,6 @@
 /*
- * Christopher Grabowski
- * COSC 355 Assignment 5
- * 14 April 2015
+ * xform-js example
+ * @author Christopher Grabowski
  */
 
 'use strict';
@@ -17,6 +16,7 @@ var INIT_SHININESS = 32;
 
 var canvas;
 var gl;
+var stats;
 var torusModel1;
 var torusModel2;
 var normalMat;
@@ -50,6 +50,9 @@ window.onload = function() {
   projection = new Matrix(); // projection matrix is set in resize()
   window.onresize = resize;
   resize();
+
+  stats = new Stats();
+  document.body.appendChild(stats.domElement);
 
   var vertexShader = genShader('phong-vertex-shader', gl.VERTEX_SHADER);
   var fragmentShader = genShader('phong-fragment-shader', gl.FRAGMENT_SHADER);
@@ -99,6 +102,8 @@ window.onload = function() {
 }
 
 function render(time) {
+  stats.begin();
+
   gl.uniform1f(uTime, time % textSpin / textSpin);
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_COLOR_BIT);
@@ -131,6 +136,8 @@ function render(time) {
   normalMat.invert();
   gl.uniformMatrix3fv(uMV, gl.FALSE, new Float32Array(normalMat));
   torus.render(gl);
+
+  stats.end();
 
   requestAnimFrame(render);
 }
