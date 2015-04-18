@@ -106,12 +106,13 @@ var xform = {};
       }
     } else {
       var type;
+      var ctorName = this.constructor.name;
       if (typeof array === 'number') {
         type = 'number';
       } else {
         type = array.constructor.name;
       }
-      throw new TypeError('Dimensional.equals expected instanceof Array but got ' + type);
+      throw new TypeError(ctorName + '.prototype.equals expected instanceof Array but got ' + type);
     }
   };
 
@@ -302,7 +303,6 @@ var xform = {};
 
   /*
    * General matrix type
-   * TODO: finish generalizing all methods that can be generalized to any dimensionality
    */
   function Matrix(m, n) {
     m = m || 4;
@@ -323,7 +323,6 @@ var xform = {};
   Matrix.cache1 = new Matrix(4, 4);
   Matrix.cache2 = new Matrix(4, 4);
 
-  // supports all (compatible) dimensionality
   Matrix.mul = function(mat1, mat2, out) {
     var m1, m2, n1, n2;
 
@@ -333,21 +332,31 @@ var xform = {};
     if (mat2 instanceof Matrix) {
       m2 = mat2.dim[0];
       n2 = mat2.dim[1];
-    } else {
+
+      if (out == null) {
+        out = new Matrix(m1, n2);
+        out.zero();
+      } else {
+        out.dim = [m1, n2];
+        out.zero();
+      }
+
+    } else if (mat2 instanceof Vector) {
       m2 = mat2.length;
       n2 = 1;
+
+      if (out == null) {
+        out = new Vector(mat2.length);
+      } else {
+        out.zero();
+      }
+
+    } else {
+      throw new TypeError('second argument to Matrix.mul must be instance of Matrix or Vector');
     }
 
     if (n1 !== m2) {
       throw new DimensionError('left matrix n = ' + n1 + ', right matrix m = ' + m2);
-    }
-
-    if (out == null) {
-      out = new Matrix(m1, n2);
-      out.zero();
-    } else {
-      out.dim = [m1, n2];
-      out.zero();
     }
 
     for (var i = 0; i < m1; ++i)
@@ -369,69 +378,6 @@ var xform = {};
       out[i] = matrix[i];
     }
     return out;
-  };
-
-  // TODO: this method must produce a permuation matrix
-  // when necessary
-  Matrix.lufac = function(matrix, lower, upper) {
-    if (typeof matrix === 'undefined') {
-      var msg = 'First argument to Matrix.lufac is undefined';
-      throw new ReferenceError(msg);
-    }
-    if (matrix.dim[0] !== matrix.dim[1]) {
-      var msg = 'Matrix.lufac requires a square matrix.';
-      throw new DimensionError(msg);
-    }
-
-    var mat = matrix;
-    var d = mat.dim[0];
-    if (typeof lower === 'undefined') {
-      lower = new Matrix(d, d);
-    } else {
-      lower.dim[0] = d;
-      lower.dim[1] = d;
-    }
-    if (typeof upper === 'undefined') {
-      upper = new Matrix(d, d);
-    } else {
-      upper.dim[0] = d;
-      upper.dim[1] = d;
-    }
-    var lo = lower;
-    var up = upper;
-
-    for (var i = 0; i < d; ++i) {
-      lo[i * d] = mat[i * d]
-      for (var j = 0; j < d; ++j) {
-        if (i > j) {
-          up[i * d + j] = 0;
-        } else if (i < j) {
-          lo[i * d + j] = 0;
-        } else {
-          up[i * d + j] = 1;
-        }
-      }
-    }
-
-    for (var j = 1; j < d; ++j)
-      for (var i = 0; i < d; ++i) {
-        if (i >= j) {
-          lo[i * d + j] = mat[i * d + j];
-
-          for (var k = 0; k < j; ++k) {
-            lo[i * d + j] -= lo[i * d + k] * up[k * d + j];
-          }
-        }
-
-        if (i < j) {
-          up[i * d + j] = mat[i * d + j];
-          for (var k = 0; k < i; ++k) {
-            up[i * d + j] -= lo[i * d + k] * up[k * d + j];
-          }
-          up[i * d + j] /= lo[i * d + i];
-        }
-      }
-    return [lower, upper];
   };
 
   Matrix.det = function(matrix) {
@@ -488,6 +434,10 @@ var xform = {};
       throw new RangeError(msg);
     }
     var mat = matrix;
+    if (mat.dim[0] === 2) {
+      return mat.set([mat[3] / det, -mat[1] / det, -mat[2] / det, mat[0] / det]);
+    }
+
     var d = mat.dim[0];
     if (typeof out === 'undefined') {
       out = new Matrix(d, d);
@@ -544,10 +494,15 @@ var xform = {};
     return out.set(arr);
   };
 
-  Matrix.prototype.set = function(array) {
-    var len = this.length;
-    for (var i = 0; i < len; ++i) {
-      this[i] = array[i];
+  Matrix.prototype.set = function(array, offset) {
+    offset = offset || 0;
+    if(array.length + offset > this.length) {
+      var msg = 'Matrix.prototype.set arguments array + offset greater than this matrix.length';
+      throw new RangeError(msg);
+    }
+
+    for (var i = 0, len = array.length; i < len; ++i) {
+      this[i + offset] = array[i];
     }
     return this;
   };
@@ -557,8 +512,8 @@ var xform = {};
     return this;
   };
 
-  // supports all dimensions
   // allows seting a non-sqaure matrix to its analog of the identity matrix
+  // (i.e., acts like the Kronecker delta over the indicies)
   Matrix.prototype.identity = function() {
     var m = this.dim[0];
     var n = this.dim[1];
@@ -570,7 +525,6 @@ var xform = {};
     return this;
   };
 
-  // suuports all dimensions
   Matrix.prototype.zero = function() {
     var len = this.dim[0] * this.dim[1];
     for (var i = 0; i < len; ++i) {
@@ -579,7 +533,6 @@ var xform = {};
     return this;
   }
 
-  // supports all (compatible) dimensions
   Matrix.prototype.mul = function(matrix) {
     var m1 = this.dim[0];
     var n1 = this.dim[1];
@@ -589,8 +542,9 @@ var xform = {};
       m2 = matrix.dim[0];
       n2 = matrix.dim[1];
     } else {
-      m2 = matrix.length;
-      n2 = 1;
+      var msg = 'Argument to Matrix.prototype.mul must be instance of Matrix. ';
+      msg += 'If you want to multiply a vector by this matrix then use Matrix.mul';
+      throw new TypeError(msg);
     }
 
     var cache = Matrix.cache1;
@@ -615,6 +569,10 @@ var xform = {};
     return this;
   };
 
+  Matrix.prototype.det = function() {
+    return Matrix.det(this);
+  };
+
   Matrix.prototype.invert = function() {
     var cache = Matrix.cache2;
     cache.dim[0] = this.dim[0];
@@ -623,7 +581,6 @@ var xform = {};
     return Matrix.invert(cache, this);
   };
 
-  // supports all dimensions
   Matrix.prototype.transpose = function() {
     var len = this.length;
     var m = this.dim[0];
@@ -646,9 +603,11 @@ var xform = {};
 
   // must be 4x4 matrix
   Matrix.prototype.asView = function(position) {
+    dimCheck(this, {dim: [4, 4]});
     position = position || [0, 0, 0];
     if (!(position instanceof Array)) {
-      throw new TypeError('position argument to asView must be an instance of Array');
+      var msg = 'Matrix.prototype.asView argument must be an instance of Array'
+      throw new TypeError(msg);
     }
     this.dim.set([4, 4]);
     this.identity();
@@ -660,14 +619,25 @@ var xform = {};
 
   // must be 4x4 matrix
   Matrix.prototype.asOrthographic = function(left, right, bottom, top, near, far) {
+    try {
+      dimCheck(this, {dim: [4, 4]});
+    } catch (e) {
+      e.message = 'Matrix.prototype.asOrthographic requires this matrix to be a 4x4 matrix, ';
+      e.message += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix.';
+      throw e;
+    }
+
     if (right - left === 0) {
-      throw new RangeError('asOrthographic: right and left cannot have the same value');
+      var msg = 'Matrix.prototype.asOrthographic: right and left cannot have the same value';
+      throw new RangeError(msg);
     }
     if (top - bottom === 0) {
-      throw new RangeError('asOrthographic: top and bottom cannot have the same value');
+      var msg = 'Matrix.prototype.asOrthographic: top and bottom cannot have the same value';
+      throw new RangeError(msg);
     }
     if (far - near === 0) {
-      throw new RangeError('asOrthographic: far and near cannot have the same value');
+      var msg = 'iMatrix.prototype.asOrthographic: far and near cannot have the same value';
+      throw new RangeError(msg);
     }
 
     this.dim.set([4, 4]);
@@ -685,11 +655,21 @@ var xform = {};
 
   // must be 4x4 matrix
   Matrix.prototype.asPerspective = function(near, far, aspect, fov) {
+    try {
+      dimCheck(this, {dim: [4, 4]});
+    } catch (e) {
+      e.message = 'Matrix.prototype.asPerspective requires this matrix to be a 4x4 matrix, ';
+      e.message += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix.';
+      throw e;
+    }
+
     if (far - near === 0) {
-      throw new RangeError('asPerspective: near and far cannot have the same value.');
+      var msg = 'Matrix.prototype.asPerspective: near and far cannot have the same value.';
+      throw new RangeError(msg);
     }
     if (aspect === 0) {
-      throw new RangeError('asPerspective: aspect cannot equal zero.');
+      var msg = 'Matrix.prototype.asPerspective: aspect cannot equal zero.';
+      throw new RangeError(msg);
     }
     near = (near === 0) ? Number.MIN_VALUE : near;
     far = (far === 0) ? Number.MIN_VALUE : far;
@@ -711,53 +691,134 @@ var xform = {};
     return this;
   };
 
-  // TODO: support all dimensions
-  Matrix.prototype.asRotation = function(axis, angle) {
-    var x = axis[0];
-    var y = axis[1];
-    var z = axis[2];
+  Matrix.prototype.asRotation = function() {
 
-    if (x === 0 && y === 0 && z === 0) {
-      throw new RangeError('rotation: axis cannot be the zero vector');
+    if (this.dim[0] > 4 || this.dim[1] > 4) {
+      var msg = 'Matrix.prototype.asRotation does not support matrices of dim > 4, ';
+      msg += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix';
+      throw new DimensionError(msg);
+    } else if (this.dim[0] !== this.dim[1]) {
+      var msg = 'Matrix.prototype.asRotation requires this matrix to be square, ';
+      msg += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix';
+      throw new DimensionErrror(msg);
     }
 
-    var mag = Math.sqrt(x * x + y * y + z * z);
-    x /= mag;
-    y /= mag;
-    z /= mag;
-    var c = Math.cos(angle);
-    var s = Math.sin(angle)
-    var t = 1 - c;
+    if (typeof arguments[0] === 'number') {
+      var angle = arguments[0];
+      var c = Math.cos(angle);
+      var s = Math.sin(angle);
 
-    this[0] = x * x * t + c;
-    this[1] = x * y * t - z * s;
-    this[2] = x * z * t + y * s;
-    this[3] = 0;
-    this[4] = x * y * t + z * s;
-    this[5] = y * y * t + c;
-    this[6] = y * z * t - x * s;
-    this[7] = 0;
-    this[8] = x * z * t - y * s;
-    this[9] = y * z * t + x * s;
-    this[10] = z * z * t + c;
-    this[11] = 0;
-    this[12] = 0;
-    this[13] = 0;
-    this[14] = 0;
-    this[15] = 1;
+      // non-homogeneous 2x2 matrix
+      if (this.dim[0] === 2 && this.dim[1] === 2) {
+        this[0] = c;
+        this[1] = -s;
+        this[2] = s;
+        this[3] = c;
+
+      // homogeneous 3x3 matrix
+      } else if (this.dim[0] === 3 && this.dim[1] === 3) {
+        this[0] = c;
+        this[1] = -s;
+        this[2] = 0;
+        this[3] = s;
+        this[4] = c;
+        this[5] = 0;
+        this[6] = 0;
+        this[7] = 0;
+        this[8] = 0;
+
+      } else {
+        var msg = 'Matrix.prototype.asRotation with first argument of type number requires this ';
+        msg += 'matrix to be a non-homogeneous 2x2 matrix or a homogeneous 3x3 matrix, but ';
+        msg += 'this matrix dim is ' + this.dim[0] + 'x' + this.dim[1] + '.';
+        throw new DimensionError(msg);
+      }
+
+    } else if (arguments[0] instanceof Array) {
+      var axis = arguments[0];
+      var x = axis[0];
+      var y = axis[1];
+      var z = axis[2];
+
+      if (x === 0 && y === 0 && z === 0) {
+        throw new RangeError('Matrix.prototype.asRotation: axis cannot be the zero vector');
+      }
+
+      var mag = Math.sqrt(x * x + y * y + z * z);
+      x /= mag;
+      y /= mag;
+      z /= mag;
+
+      var c = Math.cos(arguments[1]);
+      var s = Math.sin(arguments[1]);
+      var t = 1 - c;
+
+      // non-homogeneous 3x3 matrix
+      if (this.dim[0] === 3 && this.dim[1] === 3) {
+        this[0] = x * x * t + c;
+        this[1] = x * y * t - z * s;
+        this[2] = x * z * t + y * s;
+        this[3] = x * y * t + z * s;
+        this[4] = y * y * t + c;
+        this[5] = y * z * t - x * s;
+        this[6] = x * z * t - y * s;
+        this[7] = y * z * t + x * s;
+        this[8] = z * z * t + c;
+
+      // homogeneous 4x4 matrix
+      } else if (this.dim[0] === 4 && this.dim[1] === 4) {
+        this[0] = x * x * t + c;
+        this[1] = x * y * t - z * s;
+        this[2] = x * z * t + y * s;
+        this[3] = 0;
+        this[4] = x * y * t + z * s;
+        this[5] = y * y * t + c;
+        this[6] = y * z * t - x * s;
+        this[7] = 0;
+        this[8] = x * z * t - y * s;
+        this[9] = y * z * t + x * s;
+        this[10] = z * z * t + c;
+        this[11] = 0;
+        this[12] = 0;
+        this[13] = 0;
+        this[14] = 0;
+        this[15] = 1;
+      } else {
+        var msg = 'Matrix.prototype.asRotation with first argument instnaceof Array requires ';
+        msg += 'this matrix to be a non-homogeneous 3x3 matrix or a homogeneous 4x4 matrix, but ';
+        msg += 'this matrix dim is ' + this.dim[0] + 'x' + this.dim[1] + '.';
+        throw new DimensionError(msg);
+      }
+
+    } else {
+      var msg = 'Matrix.prototype.asRotation first argument must be of type number or ';
+      msg += 'instanceof Array.';
+    }
 
     return this;
   }
 
-  // TODO: support all dimensions
   Matrix.prototype.asTranslation = function(vector) {
     var m = this.dim[0];
     var n = this.dim[1];
     var len = vector.length;
-    if (m - 1 !== len) {
-      var msg = 'translate: argument length must be one less than the number of rows in this matrix';
-      throw new DimensionError();
+
+    if(this.dim[0] !== this.dim[1]) {
+      var msg = 'Matrix.prototype.asTranslation requires this matrix to be square, ';
+      msg += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix';
+      throw new DimensionError(msg);
     }
+    if(this.dim[0] < 3) {
+      var msg = 'Matrix.prototype.asTranslation requries this matrix to have dim >= 3, ';
+      msg += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix';
+      throw new DimensionError(msg);
+    }
+    if (m - 1 !== len) {
+      var msg = 'Matrix.prototype.asTranslation: argument length must be one less than the number ';
+      msg += 'of rows in this matrix';
+      throw new DimensionError(msg);
+    }
+
     this.identity();
     for (var i = 0; i < len; ++i) {
       this[(i + 1) * n - 1] = vector[i];
@@ -767,9 +828,10 @@ var xform = {};
 
   // supports all dimensions
   Matrix.prototype.asScale = function(arrayOrScalar) {
-    this.identity();
     var m = this.dim[0];
     var n = this.dim[1];
+
+    this.identity();
 
     if (typeof arrayOrScalar === 'number') {
       for (var i = 0; i < m - 1; ++i) {
@@ -777,7 +839,8 @@ var xform = {};
       }
     } else {
       if (arrayOrScalar.length !== m - 1) {
-        var msg = 'scale: array argument length must be one minus the number of rows in this.';
+        var msg = 'Matrix.prototype.asScale array argument length must be one minus the number ';
+        msg += 'of rows in this matrix because asScale only supports homogeneous coordinates.';
         throw new RangeError(msg);
       }
       for (var i = 0; i < m - 1; ++i) {
@@ -789,18 +852,39 @@ var xform = {};
   };
 
   Matrix.prototype.rotate = function(axis, angle) {
-    Matrix.cache2.dim.set(this.dim);
-    return this.mul(Matrix.cache2.asRotation(axis, angle));
+    Matrix.cache2.dim.set(this.dim);i
+    try {
+      this.mul(Matrix.cache2.asRotation(axis, angle));
+    } catch(e) {
+      e.message = e.message.replace('asRotation', 'rotate');
+      throw e;
+    }
+
+    return this;
   }
 
   Matrix.prototype.translate = function(vector) {
     Matrix.cache2.dim.set(this.dim);
-    return this.mul(Matrix.cache2.asTranslation(vector));
+    try {
+      this.mul(Matrix.cache2.asTranslation(vector));
+    } catch(e) {
+      e.message = e.message.replace('asTranslation', 'translate');
+      throw e;
+    }
+
+    return this;
   }
 
   Matrix.prototype.scale = function(arrayOrScalar) {
     Matrix.cache2.dim.set(this.dim);
-    return this.mul(Matrix.cache2.asScale(arrayOrScalar));
+    try {
+      this.mul(Matrix.cache2.asScale(arrayOrScalar));
+    } catch(e) {
+      e.message = e.message.replace('asScale', 'scale');
+      throw e;
+    }
+
+    return this;
   }
 
   // supports all dimensions
@@ -958,10 +1042,12 @@ var xform = {};
 
   Quaternion.prototype.setAxisAngle = function(axis, angle) {
     if (!(axis instanceof Array)) {
-      throw new TypeError('axis argument to setAxisAngle must be an instance of Array');
+      var msg = 'Quaternion.prototype.setAxisAngle axis argument must be an instance of Array';
+      throw new TypeError(msg);
     }
     if (typeof angle !== 'number') {
-      throw new TypeError('angle argument to SetAxisAngle must be of type Number');
+      var msg = 'Quaternion.prototype.SetAxisAngle angle argument must be of type Number';
+      throw new TypeError(msg);
     }
     var len = Math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
     this.t = Math.cos(angle / 2);
@@ -972,14 +1058,6 @@ var xform = {};
   Quaternion.prototype.toMatrix = function(matrix) {
     if (typeof matrix === 'undefined') {
       matrix = new Matrix();
-    } else {
-      matrix.dim[0] = 4;
-      matrix.dim[1] = 4;
-      matrix.identity();
-    }
-    if (matrix.dim[0] !== 4 && matrix.dim[1] !== 4) {
-      var msg = 'argument to Quaternion.prototype.toMatrix must be undefined or a 4x4 matrix';
-      throw new DimensionError(msg);
     }
 
     var v = this.v;
@@ -1001,15 +1079,41 @@ var xform = {};
     var yz = y * zs;
     var zz = z * zs;
 
-    matrix[0] = 1 - (yy + zz);
-    matrix[4] = xy + wz;
-    matrix[8] = xz - wy;
-    matrix[1] = xy - wz;
-    matrix[5] = 1 - (xx + zz);
-    matrix[9] = yz + wx;
-    matrix[2] = xz + wy;
-    matrix[6] = yz - wx;
-    matrix[10] = 1 - (xx + yy);
+    if(matrix.dim[0] === 4 && matrix.dim[1] === 4) {
+
+      matrix[0] = 1 - (yy + zz);
+      matrix[1] = xy - wz;
+      matrix[2] = xz + wy;
+      matrix[3] = 0;
+      matrix[4] = xy + wz;
+      matrix[5] = 1 - (xx + zz);
+      matrix[6] = yz - wx;
+      matrix[7] = 0;
+      matrix[8] = xz - wy;
+      matrix[9] = yz + wx;
+      matrix[10] = 1 - (xx + yy);
+      matrix[11] = 0;
+      matrix[12] = 0;
+      matrix[13] = 0;
+      matrix[14] = 0;
+      matrix[15] = 1;
+
+    } else if (matrix.dim[0] === 3 && matrix.dim[1] === 3) {
+      matrix[0] = 1 - (yy + zz);
+      matrix[1] = xy + wz;
+      matrix[2] = xz - wy;
+      matrix[3] = xy - wz;
+      matrix[4] = 1 - (xx + zz);
+      matrix[5] = yz + wx;
+      matrix[6] = xz + wy;
+      matrix[7] = yz - wx;
+      matrix[8] = 1 - (xx + yy);
+
+    } else {
+      var msg = 'Quaternion.prototype.toMatrix argument must be undefined, a 3x3 matrix, ';
+      msg += 'or a 4x4 matrix.';
+      throw new DImensionError(msg);
+    }
 
     return matrix;
   };
@@ -1072,7 +1176,7 @@ var xform = {};
       matrix[9] = l[1];
       matrix[10] = l[2];
     } else {
-      var msg = 'matrix argument to Attitude.toMatrix must be undefined or a 3x3 or 4x4 Matrix.';
+      var msg = 'Attitude.toMatrix matrix argument must be undefined or a 3x3 or 4x4 Matrix.';
       throw new DimensionsEror(msg);
     }
 
@@ -1105,7 +1209,7 @@ var xform = {};
 
   Attitude.prototype.toMatrix = function(matrix) {
     if (typeof Matrix === 'undefined') {
-      var msg = 'matrix argument to Attitude.prototype.toMatrix must be defined. ';
+      var msg = 'Attitude.prototype.toMatrix matrix argument must be defined. ';
       msg += 'to create a new Matrix from this attitude use Attitude.toMatrix instead.';
       throw new ReferenceError(msg);
     }

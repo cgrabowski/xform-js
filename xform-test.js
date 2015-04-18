@@ -361,6 +361,8 @@ obj1 = new Vector(4);
 assert(obj1.set([0.11, 1.22, 2.33, 3.44]).equals([0.11, 1.22, 2.33, 3.44]));
 
 // Vector.normalize
+obj1 = new Vector([3, 4]).normalize();
+assert(obj1[0] === 3/5 && obj1[1] === 4/5);
 obj1 = new Vector([2, 3, 5, 7]);
 assert(new Vector(obj1.normalize().map(function(ele) {
   return ele.toString().substr(0, 10);
@@ -382,6 +384,10 @@ assert(!(obj1 instanceof Vector));
  * * * * * * * * * * * * */
 
 // Matrix(m, n)
+obj1 = new Matrix(2, 2);
+assert(obj1[0] === 1 && obj1[1] === 0);
+assert(obj1[2] === 0 && obj1[3] === 1);
+
 obj1 = new Matrix(3, 2);
 assert(obj1[0] === 1 && obj1[1] === 0);
 assert(obj1[2] === 0 && obj1[3] === 1);
@@ -396,31 +402,48 @@ assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
 assert(obj1.dim.equals([4, 4]));
 
 // Matrix.mul
+obj1 = new Matrix(2, 2);
+obj2 = new Vector([2, 3]);
+assert(Matrix.mul(obj1, obj2).equals([2, 3]));
+obj1.set([-2, 5, 4, 8]);
+obj2.set([17, 19]);
+assert(Matrix.mul(obj1, obj2) instanceof Vector);
+assert(Matrix.mul(obj1, obj2).equals([61, 220]));
+
+obj1 = new Matrix(2, 2).set([1, 2, 3, 4]);
+obj2 = new Matrix(2, 4).set([10, 9, 8, 7, 6, 5, 4, 3]);
+assert(Matrix.mul(obj1, obj2).dim[0] === 2);
+assert(Matrix.mul(obj1, obj2).dim[1] === 4);
+assert(Matrix.mul(obj1, obj2).equals([
+  22, 19, 16, 13,
+  54, 47, 40, 33
+]));
+
+obj1 = new Matrix();
+obj2 = new Vector([1, 1, 1, 1]);
+assert(Matrix.mul(obj1, obj2).equals([1, 1, 1, 1]));
+for (var i = 0, len = obj1.length; i < len; ++i) {
+  obj1[i] = i + 1;
+}
+obj2.set([1, 2, 3, 4]);
+assert(Matrix.mul(obj1, obj2) instanceof Vector);
+assert(Matrix.mul(obj1, obj2).equals([30, 70, 110, 150]));
 obj1 = new Matrix();
 for (var i = 0, len = obj1.length; i < len; ++i) {
   obj1[i] = i + 1;
 }
-assert(obj1[0] === 1 && obj1[1] === 2 && obj1[2] === 3 && obj1[3] === 4);
-assert(obj1[4] === 5 && obj1[5] === 6 && obj1[6] === 7 && obj1[7] === 8);
-assert(obj1[8] === 9 && obj1[9] === 10 && obj1[10] === 11 && obj1[11] === 12);
-assert(obj1[12] === 13 && obj1[13] === 14 && obj1[14] === 15 && obj1[15] === 16);
 
 obj2 = new Matrix();
 for (var i = 0, len = obj2.length; i < len; ++i) {
   obj2[i] = 16 - i;
 }
-assert(obj2[0] === 16 && obj2[1] === 15 && obj2[2] === 14 && obj2[3] === 13);
-assert(obj2[4] === 12 && obj2[5] === 11 && obj2[6] === 10 && obj2[7] === 9);
-assert(obj2[8] === 8 && obj2[9] === 7 && obj2[10] === 6 && obj2[11] === 5);
-assert(obj2[12] === 4 && obj2[13] === 3 && obj2[14] === 2 && obj2[15] === 1);
-
+assert(Matrix.mul(obj1, obj2) instanceof Matrix);
 assert(Matrix.mul(obj1, obj2).equals([
   80, 70, 60, 50,
   240, 214, 188, 162,
   400, 358, 316, 274,
   560, 502, 444, 386
 ]));
-
 assert(obj1.mul(obj2).equals([
   80, 70, 60, 50,
   240, 214, 188, 162,
@@ -428,34 +451,15 @@ assert(obj1.mul(obj2).equals([
   560, 502, 444, 386
 ]));
 
-// Matrix.lufac
-obj1 = new Matrix();
-obj1.set([1, 2, 3, 4, 5, 6, 7, 8, 1, -1, 2, 3, 2, 1, 1, 2]);
-obj2 = Matrix.lufac(obj1)[0];
-assert(obj2[0] === 1 && obj2[1] === 0 && obj2[2] === 0 && obj2[3] === 0);
-assert(obj2[4] === 5 && obj2[5] === -4 && obj2[6] === 0 && obj2[7] === 0);
-assert(obj2[8] === 1 && obj2[9] === -3 && obj2[10] === 5 && obj2[11] === 0);
-assert(obj2[12] === 2 && obj2[13] === -3 && obj2[14] === 1 && obj2[15] === 7 / 5);
-
-obj2 = Matrix.lufac(obj1)[1];
-assert(obj2[0] === 1 && obj2[1] === 2 && obj2[2] === 3 && obj2[3] === 4);
-assert(obj2[4] === 0 && obj2[5] === 1 && obj2[6] === 2 && obj2[7] === 3);
-assert(obj2[8] === 0 && obj2[9] === 0 && obj2[10] === 1 && obj2[11] === 8 / 5);
-assert(obj2[12] === 0 && obj2[13] === 0 && obj2[14] === 0 && obj2[15] === 1);
-
-obj1 = new Matrix(3, 3);
-obj1.set([1, 2, 3, 4, 5, 6, -1, 1, 2]);
-obj2 = Matrix.lufac(obj1)[0];
-assert(obj2[0] === 1 && obj2[1] === 0 && obj2[2] === 0);
-assert(obj2[3] === 4 && obj2[4] === -3 && obj2[5] === 0);
-assert(obj2[6] === -1 && obj2[7] === 3 && obj2[8] === -1);
-
-obj2 = Matrix.lufac(obj1)[1];
-assert(obj2[0] === 1 && obj2[1] === 2 && obj2[2] === 3);
-assert(obj2[3] === 0 && obj2[4] === 1 && obj2[5] === 2);
-assert(obj2[6] === 0 && obj2[7] === 0 && obj2[8] === 1);
-
 // Matrix.det
+obj1 = new Matrix(2, 2);
+assert(Matrix.det(obj1) === 1);
+obj1.zero();
+assert(Matrix.det(obj1) === 0);
+obj1.set([1, -10, 20, -300]);
+assert(Matrix.det(obj1) === -100);
+assert(obj1.det() === -100);
+
 obj1 = new Matrix(3, 3);
 assert(Matrix.det(obj1) === 1);
 obj1.zero();
@@ -470,6 +474,7 @@ obj1.set([2, 4, 8, 16, 32, 64, 128, 256, 512]);
 assert(Matrix.det(obj1) === 0);
 obj1.set([2, 3, 4, 9, 16, 25, 128, 256, 513]);
 assert(Matrix.det(obj1) === 389);
+
 obj1 = new Matrix();
 assert(Matrix.det(obj1) === 1);
 obj1.zero();
@@ -482,6 +487,8 @@ obj1.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 assert(Matrix.det(obj1) === 0);
 obj1.set([2, 3, 4, 5, 9, 16, 25, 36, 128, 256, 512, 1028, 3, 4, 5, 6]);
 assert(Matrix.det(obj1) === -264);
+assert(obj1.det() === -264);
+
 obj1 = new Matrix(5, 5);
 assert(Matrix.det(obj1) === 1);
 obj1.zero();
@@ -498,8 +505,24 @@ obj1[12] = 1;
 obj1[18] = 2;
 obj1[20] = -47;
 assert(Matrix.det(obj1) === 37276800);
+assert(obj1.det() === 37276800);
 
 // Matrix.invert
+obj1 = new Matrix(2, 2);
+assert(Matrix.invert(obj1).equals(obj1));
+obj1.zero();
+
+threw = false;
+try {
+  Matrix.invert(obj1);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
+
+obj1.set([2, 1 / 2, 5 / 3, 5 / 6]);
+assert(Matrix.invert(obj1).equals([1, -3 / 5, -2, 12 / 5]));
+
 obj1 = new Matrix(3, 3);
 assert(Matrix.invert(obj1).equals(obj1));
 obj1.zero();
@@ -611,10 +634,20 @@ assert(Matrix.invert(obj1).equals([
 ]));
 
 // Matrix.set
+obj1 = new Matrix(2, 2).set([5, 6], 2);
+assert(obj1[0] === 1 && obj1[1] === 0);
+assert(obj1[2] === 5 && obj1[3] === 6);
+
 obj1 = new Matrix(2, 3).set([1, 2, 3, 4, 5, 6]);
 assert(obj1.equals([1, 2, 3, 4, 5, 6]));
 obj2 = new Matrix(3, 2).set([6, 5, 4, 3, 2, 1]);
 assert(obj2.equals([6, 5, 4, 3, 2, 1]));
+
+obj1 = new Matrix().set([10, 11, 12, 13, 14, 15], 10);
+assert(obj1[0] === 1 && obj1[1] === 0 && obj1[2] === 0 && obj1[3] === 0);
+assert(obj1[4] === 0 && obj1[5] === 1 && obj1[6] === 0 && obj1[7] === 0);
+assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === 10 && obj1[11] === 11);
+assert(obj1[12] === 12 && obj1[13] === 13 && obj1[14] === 14 && obj1[15] === 15);
 
 // Matrix.setEntry
 obj1 = new Matrix(4, 5).setEntry(1, 5, 2).setEntry(2, 4, 3).setEntry(3, 3, 4).setEntry(4, 2, 5);
@@ -624,6 +657,25 @@ assert(obj1[10] === 0 && obj1[11] === 0 && obj1[12] === 4 && obj1[13] === 0, obj
 assert(obj1[15] === 0 && obj1[16] === 5 && obj1[17] === 0 && obj1[18] === 1, obj1[19] === 0);
 
 // Matrix.identity
+obj1 = new Matrix(2, 2);
+obj1.forEach(function(_, i, arr) {
+  arr[i] = 2;
+});
+obj1.identity();
+
+assert(obj1[0] === 1 && obj1[1] === 0);
+assert(obj1[2] === 0 && obj1[3] === 1);
+
+obj1 = new Matrix(3, 3);
+obj1.forEach(function(_, i, arr) {
+  arr[i] = 2;
+});
+obj1.identity();
+
+assert(obj1[0] === 1 && obj1[1] === 0 && obj1[2] === 0);
+assert(obj1[3] === 0 && obj1[4] === 1 && obj1[5] === 0);
+assert(obj1[6] === 0 && obj1[7] === 0 && obj1[8] === 1);
+
 obj1 = new Matrix();
 obj1.forEach(function(_, i, arr) {
   arr[i] = 2;
@@ -641,6 +693,10 @@ obj1.zero().forEach(function(ele) {
 });
 
 // Matrix.transpose
+obj1 = new Matrix(2, 2).set([1, 2, 3, 4]).transpose();
+assert(obj1[0] === 1 && obj1[1] === 3);
+assert(obj1[2] === 2 && obj1[3] === 4);
+
 obj1 = new Matrix(3, 2).set([1, 2, 3, 4, 5, 6]).transpose();
 assert(obj1[0] === 1 && obj1[1] === 3 && obj1[2] === 5);
 assert(obj1[3] === 2 && obj1[4] === 4 && obj1[5] === 6);
@@ -664,6 +720,14 @@ assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === 1 && obj1[11] === 30);
 assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
 
 // Matrix.asOrtographic
+threw = false;
+try {
+  obj1 = new Matrix(3, 4).asOrthographic(200, -200, -100, 100, -100, 300);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
+
 obj1 = new Matrix().asOrthographic(200, -200, -100, 100, -100, 300);
 assert(obj1[0] === -0.005 && obj1[1] === 0 && obj1[2] === 0 && obj1[3] === 0);
 assert(obj1[4] === 0 && obj1[5] === 0.01 && obj1[6] === 0 && obj1[7] === 0);
@@ -671,6 +735,14 @@ assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === -0.005 && obj1[11] === -0.
 assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
 
 // Matrix.asPerspective
+threw = false;
+try {
+  obj1 = new Matrix(3, 4).asPerspective(-10, 100, 0.7, 0.25);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
+
 obj1 = new Matrix().asPerspective(-10, 100, 0.7, 0.25);
 var e11 = -10 / (-10 * Math.tan(0.25) * 0.7);
 var e22 = -10 / (-10 * Math.tan(0.25));
@@ -684,6 +756,53 @@ assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === e33 && obj1[11] === e34);
 assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === e43 && obj1[15] === e44);
 
 // Matrix.asRotation
+threw = false;
+try {
+  obj1 = new Matrix(3, 4).asRotation(Math.PI / 4);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
+
+obj1 = new Matrix(2, 2);
+obj1.asRotation(Math.PI / 4);
+assert(obj1[0] === Math.cos(Math.PI / 4));
+assert(obj1[1] === -Math.sin(Math.PI / 4));
+assert(obj1[2] === Math.sin(Math.PI / 4));
+assert(obj1[3] === Math.cos(Math.PI / 4));
+
+obj1 = new Matrix(3, 3);
+obj1.asRotation(Math.PI / 6);
+assert(obj1[0] === Math.cos(Math.PI / 6));
+assert(obj1[1] === -Math.sin(Math.PI / 6));
+assert(obj1[2] === 0);
+assert(obj1[3] === Math.sin(Math.PI / 6));
+assert(obj1[4] === Math.cos(Math.PI / 6));
+assert(obj1[5] === 0);
+assert(obj1[6] === 0);
+assert(obj1[7] === 0);
+assert(obj1[8] === 0);
+
+obj2 = new Vector([1, 2, 3]).normalize();
+obj1 = new Matrix(3, 3).asRotation(obj2, Math.PI / 4);
+var x = obj2[0];
+var y = obj2[1];
+var z = obj2[2];
+
+var c = Math.cos(Math.PI / 4);
+var s = Math.sin(Math.PI / 4);
+var t = 1 - c;
+
+assert(obj1[0] === x * x * t + c);
+assert(obj1[1] === x * y * t - z * s);
+assert(obj1[2] === x * z * t + y * s);
+assert(obj1[3] === x * y * t + z * s);
+assert(obj1[4] === y * y * t + c);
+assert(obj1[5] === y * z * t - x * s);
+assert(obj1[6] === x * z * t - y * s);
+assert(obj1[7] === y * z * t + x * s);
+assert(obj1[8] === z * z * t + c);
+
 obj2 = new Vector([1, 2, 3]).normalize();
 obj1 = new Matrix().asRotation(obj2, Math.PI / 4);
 var x = obj2[0];
@@ -706,53 +825,103 @@ assert(obj1[9] === y * z * t + x * s);
 assert(obj1[10] === z * z * t + c);
 
 // Matrix.rotate
-obj1 = new Matrix().asRotation(new Vector([1, 2, 3]).normalize(), Math.PI / 4);
-obj2 = new Matrix();
+threw = false;
+try {
+  obj1 = new Matrix(3, 4).rotate(Math.PI / 4);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
 
-obj2.rotate(new Vector([1, 2, 3]).normalize(), Math.PI / 4);
+obj1 = new Matrix(2, 2).asRotation(Math.PI / 8);
+obj2 = new Matrix(2, 2);
+obj2.rotate(Math.PI / 8);
+assert(obj2.equals(obj1));
+
+obj1 = new Matrix(3, 3).asRotation(new Vector([1, 2, 3]).normalize(), Math.PI / 8);
+obj2 = new Matrix(3, 3);
+obj2.rotate(new Vector([1, 2, 3]).normalize(), Math.PI / 8);
+assert(obj2.equals(obj1));
+
+obj1 = new Matrix().asRotation(new Vector([0, 1, 0]).normalize(), Math.PI / 3);
+obj2 = new Matrix();
+obj2.rotate(new Vector([0, 1, 0]).normalize(), Math.PI / 3);
 assert(obj2.equals(obj1));
 
 // Matrix.asTranslation
-obj1 = new Matrix().asTranslation([2, 3, 4]);
-assert(obj1[0] === 1 && obj1[1] === 0 && obj1[2] === 0 && obj1[3] === 2);
-assert(obj1[4] === 0 && obj1[5] === 1 && obj1[6] === 0 && obj1[7] === 3);
-assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === 1 && obj1[11] === 4);
-assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
+threw = false;
+try {
+  obj1 = new Matrix(3, 4).asTranslation(Math.PI / 4);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
+
 
 obj1 = new Matrix(3, 3).asTranslation([5, 6]);
 assert(obj1[0] === 1 && obj1[1] === 0 && obj1[2] === 5);
 assert(obj1[3] === 0 && obj1[4] === 1 && obj1[5] === 6);
 assert(obj1[6] === 0 && obj1[7] === 0 && obj1[8] === 1);
 
-// Matrix.translate
 obj1 = new Matrix().asTranslation([2, 3, 4]);
-obj2 = new Matrix();
-assert(obj2.translate([2, 3, 4]).equals(obj1));
+assert(obj1[0] === 1 && obj1[1] === 0 && obj1[2] === 0 && obj1[3] === 2);
+assert(obj1[4] === 0 && obj1[5] === 1 && obj1[6] === 0 && obj1[7] === 3);
+assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === 1 && obj1[11] === 4);
+assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
+
+// Matrix.translate
+threw = false;
+try {
+  obj1 = new Matrix(3, 4).translate(Math.PI / 4);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
 
 obj1 = new Matrix(3, 3).asTranslation([5, 6]);
 obj2 = new Matrix(3, 3);
 assert(obj2.translate([5, 6]).equals(obj1));
 
+obj1 = new Matrix().asTranslation([2, 3, 4]);
+obj2 = new Matrix();
+assert(obj2.translate([2, 3, 4]).equals(obj1));
+
 // Matrix.asScale
-obj1 = new Matrix().asScale([2, 3, 4]);
-assert(obj1[0] === 2 && obj1[1] === 0 && obj1[2] === 0 && obj1[3] === 0);
-assert(obj1[4] === 0 && obj1[5] === 3 && obj1[6] === 0 && obj1[7] === 0);
-assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === 4 && obj1[11] === 0);
-assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
+threw = false;
+try {
+  obj1 = new Matrix().asScale([1, 2, 3, 4]);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
 
 obj1 = new Matrix(3, 3).asScale([5, 6]);
 assert(obj1[0] === 5 && obj1[1] === 0 && obj1[2] === 0);
 assert(obj1[3] === 0 && obj1[4] === 6 && obj1[5] === 0);
 assert(obj1[6] === 0 && obj1[7] === 0 && obj1[8] === 1);
 
-// Matrix.scale
 obj1 = new Matrix().asScale([2, 3, 4]);
-obj2 = new Matrix();
-assert(obj2.scale([2, 3, 4]).equals(obj1));
+assert(obj1[0] === 2 && obj1[1] === 0 && obj1[2] === 0 && obj1[3] === 0);
+assert(obj1[4] === 0 && obj1[5] === 3 && obj1[6] === 0 && obj1[7] === 0);
+assert(obj1[8] === 0 && obj1[9] === 0 && obj1[10] === 4 && obj1[11] === 0);
+assert(obj1[12] === 0 && obj1[13] === 0 && obj1[14] === 0 && obj1[15] === 1);
+
+// Matrix.scale
+threw = false;
+try {
+  obj1 = new Matrix().scale([1, 2, 3, 4]);
+} catch (_) {
+  threw = true;
+}
+assert(threw);
 
 obj1 = new Matrix(3, 3).asScale([5, 6]);
 obj2 = new Matrix(3, 3);
 assert(obj2.scale([5, 6]).equals(obj1));
+
+obj1 = new Matrix().asScale([2, 3, 4]);
+obj2 = new Matrix();
+assert(obj2.scale([2, 3, 4]).equals(obj1));
 
 /* * * * * * * * * * * * *
  *
