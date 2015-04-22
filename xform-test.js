@@ -64,7 +64,7 @@ function assert(assertion, message) {
  * usingNamespace
  */
 
-if (typeof GLOBAL != 'undefined') {
+if (typeof GLOBAL !== 'undefined') {
   xform.usingNamespace(GLOBAL);
 } else {
   xform.usingNamespace(this);
@@ -228,22 +228,22 @@ assert(error.dims.equals([
  *
  * * * * * * * * * * * * */
 
-// Dimensional.equals with unequal Dimensional(Array)
+// Dimensional.prototype.equals with unequal Dimensional(Array)
 obj1 = new Dimensional([2, 3, 4]);
 obj2 = new Dimensional([2, 3, 5]);
 assert(!obj1.equals(obj2));
 
-// Dimensional.equals with equal Dimensional(Array)
+// Dimensional.prototype.equals with equal Dimensional(Array)
 obj1 = new Dimensional([2, 3, 4]);
 obj2 = new Dimensional([2, 3, 4]);
 assert(obj2.equals(obj1));
 
-// Dimensional.equals with unequal Dimensional(number)
+// Dimensional.prototype.equals with unequal Dimensional(number)
 obj1 = new Dimensional(3);
 obj2 = new Dimensional(4);
 assert(!obj1.equals(obj2));
 
-// Dimensional.equals with equal Dimensional(number)
+// Dimensional.prototype.equals with equal Dimensional(number)
 obj1 = new Dimensional(5);
 obj1.equals(new Dimensional(5));
 
@@ -362,7 +362,7 @@ assert(obj1.set([0.11, 1.22, 2.33, 3.44]).equals([0.11, 1.22, 2.33, 3.44]));
 
 // Vector.normalize
 obj1 = new Vector([3, 4]).normalize();
-assert(obj1[0] === 3/5 && obj1[1] === 4/5);
+assert(obj1[0] === 3 / 5 && obj1[1] === 4 / 5);
 obj1 = new Vector([2, 3, 5, 7]);
 assert(new Vector(obj1.normalize().map(function(ele) {
   return ele.toString().substr(0, 10);
@@ -1155,9 +1155,9 @@ assert(obj1.look[2] === 0);
 
 // Attitude.roll
 obj1.roll(Math.PI / 2);
-assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 0);
-assert(Math.round(obj1.cross[1] * 1000000) / 1000000 === 0);
-assert(Math.round(obj1.cross[2] * 1000000) / 1000000 === 1);
+assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 0, obj1.cross[0]);
+assert(Math.round(obj1.cross[1] * 1000000) / 1000000 === 0, obj1.cross[1]);
+assert(Math.round(obj1.cross[2] * 1000000) / 1000000 === 1, obj1.cross[2]);
 assert(Math.round(obj1.up[0] * 1000000) / 1000000 === 1);
 assert(Math.round(obj1.up[1] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.up[2] * 1000000) / 1000000 === 0);

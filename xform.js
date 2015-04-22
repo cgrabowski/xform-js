@@ -27,7 +27,11 @@
  *
  */
 
-// create the xform namespace for running in a browser environment
+/**
+ * create the xform namespace for running in a browser environment
+ *
+ * @namespace
+ */
 var xform = {};
 
 (function(undefined) {
@@ -73,8 +77,33 @@ var xform = {};
     }
   };
 
-  /*
+  /**
    * Common supertype of all types with dimensions.
+   *
+   * @name Dimensional
+   * @memberof xform
+   * @constructor
+   * @extends Array
+   * @param {Array} dimensionality An array whose entries represent an index and
+   * whose value is the dimensionality of that index
+   * @example
+   * // Creates a Dimensional with a 3-dimensional index and a 4-dimensional
+   * // index, just like a 3x4 Matrix.
+   * new Dimensional([3, 4]);
+   */
+  /**
+   * Common supertype of all types with dimensions.
+   *
+   * @name Dimensional^2
+   * @memberof xform
+   * @constructor
+   * @extends Array
+   * @param {number} dimensionality A number that represents the dimensionality
+   * of a Dimensional with only one index
+   * @example
+   * // Creates a Dimensinoal with one 4-dimensional index,
+   * // just like a 4-dimensional Vector
+   * new Dimensional(4);
    */
   function Dimensional(dimensionality) {
     dimensionality = dimensionality || null;
@@ -145,8 +174,25 @@ var xform = {};
     return this;
   };
 
-  /*
+  /**
+   * General vector type.
+   *
+   * @name Vector
+   * @memberof xform
+   * @constructor
+   * @extends Dimensional
+   * @param {Array} values An array whose entries will become the values of the
+   * vector. The vector's dimension will be set to the array's length
+   */
+  /**
    * General vector type
+   *
+   * @name Vector^2
+   * @memberof xform
+   * @constructor
+   * @extends Dimensional
+   * @param {number} dimension The vector's dimension will be set to this value.
+   * Each of the vector's entries will be set to zero.
    */
   function Vector(dimOrArray) {
     var dimension = (dimOrArray instanceof Array) ? dimOrArray.length : dimOrArray;
@@ -168,6 +214,9 @@ var xform = {};
   Vector.prototype = Object.create(Dimensional.prototype);
   Vector.prototype.constructor = Vector;
 
+  /**
+   * @static
+   */
   Vector.copy = function(vector, out) {
     if (out == null) {
       out = new Vector(vector);
@@ -301,8 +350,15 @@ var xform = {};
     }) + ' )';
   };
 
-  /*
-   * General matrix type
+  /**
+   * General matrix type.
+   *
+   * @name Matrix
+   * @memberof xform
+   * @constructor
+   * @extends Dimensional
+   * @param {number} m The number of rows in the matrix.
+   * @param {number} n The number of columns in the matrix.
    */
   function Matrix(m, n) {
     m = m || 4;
@@ -496,7 +552,7 @@ var xform = {};
 
   Matrix.prototype.set = function(array, offset) {
     offset = offset || 0;
-    if(array.length + offset > this.length) {
+    if (array.length + offset > this.length) {
       var msg = 'Matrix.prototype.set arguments array + offset greater than this matrix.length';
       throw new RangeError(msg);
     }
@@ -603,7 +659,9 @@ var xform = {};
 
   // must be 4x4 matrix
   Matrix.prototype.asView = function(position) {
-    dimCheck(this, {dim: [4, 4]});
+    dimCheck(this, {
+      dim: [4, 4]
+    });
     position = position || [0, 0, 0];
     if (!(position instanceof Array)) {
       var msg = 'Matrix.prototype.asView argument must be an instance of Array'
@@ -620,7 +678,9 @@ var xform = {};
   // must be 4x4 matrix
   Matrix.prototype.asOrthographic = function(left, right, bottom, top, near, far) {
     try {
-      dimCheck(this, {dim: [4, 4]});
+      dimCheck(this, {
+        dim: [4, 4]
+      });
     } catch (e) {
       e.message = 'Matrix.prototype.asOrthographic requires this matrix to be a 4x4 matrix, ';
       e.message += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix.';
@@ -656,7 +716,9 @@ var xform = {};
   // must be 4x4 matrix
   Matrix.prototype.asPerspective = function(near, far, aspect, fov) {
     try {
-      dimCheck(this, {dim: [4, 4]});
+      dimCheck(this, {
+        dim: [4, 4]
+      });
     } catch (e) {
       e.message = 'Matrix.prototype.asPerspective requires this matrix to be a 4x4 matrix, ';
       e.message += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix.';
@@ -715,7 +777,7 @@ var xform = {};
         this[2] = s;
         this[3] = c;
 
-      // homogeneous 3x3 matrix
+        // homogeneous 3x3 matrix
       } else if (this.dim[0] === 3 && this.dim[1] === 3) {
         this[0] = c;
         this[1] = -s;
@@ -765,7 +827,7 @@ var xform = {};
         this[7] = y * z * t + x * s;
         this[8] = z * z * t + c;
 
-      // homogeneous 4x4 matrix
+        // homogeneous 4x4 matrix
       } else if (this.dim[0] === 4 && this.dim[1] === 4) {
         this[0] = x * x * t + c;
         this[1] = x * y * t - z * s;
@@ -803,12 +865,12 @@ var xform = {};
     var n = this.dim[1];
     var len = vector.length;
 
-    if(this.dim[0] !== this.dim[1]) {
+    if (this.dim[0] !== this.dim[1]) {
       var msg = 'Matrix.prototype.asTranslation requires this matrix to be square, ';
       msg += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix';
       throw new DimensionError(msg);
     }
-    if(this.dim[0] < 3) {
+    if (this.dim[0] < 3) {
       var msg = 'Matrix.prototype.asTranslation requries this matrix to have dim >= 3, ';
       msg += 'but this matrix is a ' + this.dim[0] + 'x' + this.dim[1] + ' matrix';
       throw new DimensionError(msg);
@@ -852,10 +914,11 @@ var xform = {};
   };
 
   Matrix.prototype.rotate = function(axis, angle) {
-    Matrix.cache2.dim.set(this.dim);i
+    Matrix.cache2.dim.set(this.dim);
+    i
     try {
       this.mul(Matrix.cache2.asRotation(axis, angle));
-    } catch(e) {
+    } catch (e) {
       e.message = e.message.replace('asRotation', 'rotate');
       throw e;
     }
@@ -867,7 +930,7 @@ var xform = {};
     Matrix.cache2.dim.set(this.dim);
     try {
       this.mul(Matrix.cache2.asTranslation(vector));
-    } catch(e) {
+    } catch (e) {
       e.message = e.message.replace('asTranslation', 'translate');
       throw e;
     }
@@ -879,7 +942,7 @@ var xform = {};
     Matrix.cache2.dim.set(this.dim);
     try {
       this.mul(Matrix.cache2.asScale(arrayOrScalar));
-    } catch(e) {
+    } catch (e) {
       e.message = e.message.replace('asScale', 'scale');
       throw e;
     }
@@ -910,8 +973,13 @@ var xform = {};
     return str;
   };
 
-  /*
-   * Quaternion type
+  /**
+   * Quaternion type.
+   *
+   * @name Quaternion
+   * @memberof xform
+   * @constructor
+   * @extends Dimensional
    */
   function Quaternion() {
     this.t = 1;
@@ -1079,7 +1147,7 @@ var xform = {};
     var yz = y * zs;
     var zz = z * zs;
 
-    if(matrix.dim[0] === 4 && matrix.dim[1] === 4) {
+    if (matrix.dim[0] === 4 && matrix.dim[1] === 4) {
 
       matrix[0] = 1 - (yy + zz);
       matrix[1] = xy - wz;
@@ -1130,21 +1198,55 @@ var xform = {};
     return 'r: ' + this.t + ', i: [ ' + this.v[0] + ', ' + this.v[1] + ', ' + this.v[2] + ' ]';
   };
 
-
-  /*
+  /**
+   * Attitude type.
    * Provides yaw, pitch, and roll attitude rotations.
+   * Uses a quaternion and an orthogonal 3x3 matrix under the hood.
    *
-   * Uses a quaternion and orthagonal 3x3 matrix under the hood.
+   * @name Attitude
+   * @memberof xform
+   * @constructor
+   * @extends Dimensional
    */
   function Attitude() {
-    // lateral axis
-    this.cross = new Vector([1, 0, 0]);
-    // normal axis
-    this.up = new Vector([0, 1, 0]);
-    // longitudinal axis
-    this.look = new Vector([0, 0, 1]);
+    this.dim = new Dimensions([3]);
+    // lateral axis basis
+    this[0] = new Vector([1, 0, 0]);
+    // normal axis basis
+    this[1] = new Vector([0, 1, 0]);
+    // longitudinal axis basis
+    this[2] = new Vector([0, 0, 1]);
+
+    Object.defineProperty(this, 'cross', {
+      get: function() {
+        return this[0];
+      },
+      set: function(vec) {
+        this[0] = vec;
+      }
+    });
+
+    Object.defineProperty(this, 'up', {
+      get: function() {
+        return this[1];
+      },
+      set: function(vec) {
+        this[1] = vec;
+      }
+    });
+
+    Object.defineProperty(this, 'look', {
+      get: function() {
+        return this[2];
+      },
+      set: function(vec) {
+        this[2] = vec;
+      }
+    });
   }
-  Attitude.cache = new Quaternion();
+  Attitude.prototype = Object.create(Dimensional.prototype);
+  Attitude.prototype.constructor = Attitude;
+  Attitude.quaternion = new Quaternion();
 
   Attitude.toMatrix = function(attitude, matrix) {
     if (typeof matrix === 'undefined') {
@@ -1184,26 +1286,26 @@ var xform = {};
   };
 
   Attitude.prototype.pitch = function(theta) {
-    var cache = Attitude.cache;
-    cache.setAxisAngle(this.cross, -theta);
-    cache.rotate(this.up);
-    cache.rotate(this.look);
+    var quaternion = Attitude.quaternion;
+    quaternion.setAxisAngle(this[0], -theta);
+    quaternion.rotate(this[1]);
+    quaternion.rotate(this[2]);
     return this;
   }
 
   Attitude.prototype.yaw = function(theta) {
-    var cache = Attitude.cache;
-    cache.setAxisAngle(this.up, -theta);
-    cache.rotate(this.cross);
-    cache.rotate(this.look);
+    var quaternion = Attitude.quaternion;
+    quaternion.setAxisAngle(this[1], -theta);
+    quaternion.rotate(this[0]);
+    quaternion.rotate(this[2]);
     return this;
   }
 
   Attitude.prototype.roll = function(theta) {
-    var cache = Attitude.cache;
-    cache.setAxisAngle(this.look, -theta);
-    cache.rotate(this.cross);
-    cache.rotate(this.up);
+    var quaternion = Attitude.quaternion;
+    quaternion.setAxisAngle(this[2], -theta);
+    quaternion.rotate(this[0]);
+    quaternion.rotate(this[1]);
     return this;
   }
 
