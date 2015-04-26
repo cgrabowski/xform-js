@@ -1,6 +1,10 @@
 xform-js JavaScript Linear Algebra Library
 ==========================================
 
+Documentation: http://cgrabowski.github.io/xform-js
+
+Example: http://cgrabowski.github.io/xform-js/example/example.html
+
 xform-js is a JavaScript linear algebra library. It supports math used in 3D graphics as well as
 math with vectors and matrices of any dimensionality.
 

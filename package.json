@@ -1,6 +1,6 @@
 {
   "name": "xform-js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "xform-js JavaScript linear algebra library.",
   "author": "Christopher Grabowski",
   "license": "MIT",
@@ -10,7 +10,7 @@
     "url": "https://github.com/cgrabowski/xform-js/issues"
   },
   "scripts": {
-    "minify": "uglifyjs xform.js --o xform.0.0.1.min.js --preamble '// xform-js Copyright 2015 Christopher Grabowski https://github.com/cgrabowski MIT License'",
+    "minify": "uglifyjs xform.js --o xform.0.1.0.min.js --preamble '// xform-js Copyright 2015 Christopher Grabowski https://github.com/cgrabowski MIT License'",
     "gen-docs": "mkdir -p docs && jsdoc -d docs --readme README.md xform.js"
   },
   "devDependencies": {

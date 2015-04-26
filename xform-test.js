@@ -2,7 +2,6 @@
  * tests for xform-js
  *
  * @author Christopher Grabowski
- *
  */
 
 var xform;
@@ -74,7 +73,7 @@ assert(Dimensions === xform.Dimensions);
 assert(Vector === xform.Vector);
 assert(Matrix === xform.Matrix);
 assert(Quaternion === xform.Quaternion);
-assert(Attitude === Attitude);
+assert(Attitude === xform.Attitude);
 assert(DimensionError === xform.DimensionError);
 assert(dimCheck === xform.dimCheck);
 assert(arrayIndexedEntriesEqual === xform.arrayIndexedEntriesEqual);
@@ -856,7 +855,6 @@ try {
   threw = true;
 }
 assert(threw);
-
 
 obj1 = new Matrix(3, 3).asTranslation([5, 6]);
 assert(obj1[0] === 1 && obj1[1] === 0 && obj1[2] === 5);

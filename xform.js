@@ -3,7 +3,7 @@
  *
  * @author Christopher Grabowski - https://github.com/cgrabowski
  * @license MIT License
- * @version 0.0.1
+ * @version 0.1.0
  *
  * Copyright (c) 2015 Christopher Grabowski
  *
@@ -28,7 +28,6 @@
  */
 
 // create the xform namespace for running in a browser environment.
-
 /**
  * All types and functions belong to the xform namespace.
  *
@@ -51,7 +50,7 @@ var xform = {};
    * @property {constructor} Matrix
    * @property {constructor} Quaternion
    * @property {constructor} Attitude
-   * @property {constructor}  DimensionError
+   * @property {constructor} DimensionError
    */
   xform.Dimensional = Dimensional;
   xform.Dimensions = Dimensions;
@@ -156,7 +155,6 @@ var xform = {};
    * of dimensions of each index -or- for convenience, a number that represents the dimensions of
    * an object with one index
    */
-
   function Dimensions(arrayOrNumber) {
     arrayOrNumber = arrayOrNumber || null;
     if (typeof arrayOrNumber === 'number') {
@@ -506,7 +504,7 @@ var xform = {};
   /**
    * General matrix type.
    *
-   * This Matrix type stores values in column-major order, so a Matrix must be
+   * This Matrix type stores values in row-major order, so a Matrix must be
    * transposed before sending its values to an OpenGL shader.
    *
    * @name Matrix
