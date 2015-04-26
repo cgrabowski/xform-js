@@ -3,7 +3,7 @@
  *
  * @author Christopher Grabowski - https://github.com/cgrabowski
  * @license MIT License
- * @version 0.0.1
+ * @version 0.1.0
  *
  * Copyright (c) 2015 Christopher Grabowski
  *
