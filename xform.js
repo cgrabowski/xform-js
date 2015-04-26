@@ -512,8 +512,8 @@ var xform = {};
    * @name Matrix
    * @class
    * @extends Dimensional
-   * @param {number} m The number of rows in the matrix.
-   * @param {number} n The number of columns in the matrix.
+   * @param {number} [m = 4] The number of rows in the matrix.
+   * @param {number} [n = 4] The number of columns in the matrix.
    */
   function Matrix(m, n) {
     m = m || 4;

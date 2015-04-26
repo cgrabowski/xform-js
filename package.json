@@ -10,14 +10,14 @@
     "url": "https://github.com/cgrabowski/xform-js/issues"
   },
   "scripts": {
-    "test": "node ./xform-test.js",
-    "minify": "uglifyjs xform.js --o xform.0.0.1.min.js --preamble '// xform-js Copyright 2015 Christopher Grabowski https://github.com/cgrabowski MIT License'"
+    "minify": "uglifyjs xform.js --o xform.0.0.1.min.js --preamble '// xform-js Copyright 2015 Christopher Grabowski https://github.com/cgrabowski MIT License'",
+    "gen-docs": "mkdir -p docs && jsdoc -d docs --readme README.md xform.js"
   },
   "devDependencies": {
-    "uglify-js": "2.4.x"
+    "uglify-js": "2.4.x",
+    "jsdoc": "3.3.0-beta3"
   },
   "keywords": [
-    "webgl",
     "matrix",
     "vector",
     "quaternion",
