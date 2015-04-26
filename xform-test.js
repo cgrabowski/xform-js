@@ -1141,6 +1141,17 @@ assert(obj1.look[0] === 0);
 assert(Math.round(obj1.look[1] * 1000000) / 1000000 === 1);
 assert(obj1.look[2] === 0);
 
+obj2 = obj1.orientation.toMatrix();
+assert(obj2[0] === 1);
+assert(obj2[1] === 0);
+assert(obj2[2] === 0);
+assert(obj2[4] === 0);
+assert(Math.round(obj2[5] * 1000000) / 1000000 === 0);
+assert(obj2[6] === -1);
+assert(obj2[8] === 0);
+assert(obj2[9] === 1);
+assert(Math.round(obj2[10] * 1000000) / 1000000 === 0);
+
 // Attitude.yaw
 obj1.yaw(Math.PI / 6).yaw(-Math.PI / 6);
 assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 1);
@@ -1153,17 +1164,39 @@ assert(Math.round(obj1.look[0] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.look[1] * 1000000) / 1000000 === 1);
 assert(obj1.look[2] === 0);
 
+obj2 = obj1.orientation.toMatrix();
+assert(Math.round(obj2[0] * 1000000) / 1000000 === 1);
+assert(Math.round(obj2[1] * 1000000) / 1000000 === 0);
+assert(obj2[2] === 0);
+assert(obj2[4] === 0);
+assert(Math.round(obj2[5] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[6] * 1000000) / 1000000 === -1);
+assert(Math.round(obj2[8] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[9] * 1000000) / 1000000 === 1);
+assert(Math.round(obj2[10] * 1000000) / 1000000 === 0);
+
 // Attitude.roll
 obj1.roll(Math.PI / 2);
-assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 0, obj1.cross[0]);
-assert(Math.round(obj1.cross[1] * 1000000) / 1000000 === 0, obj1.cross[1]);
-assert(Math.round(obj1.cross[2] * 1000000) / 1000000 === 1, obj1.cross[2]);
+assert(Math.round(obj1.cross[0] * 1000000) / 1000000 === 0);
+assert(Math.round(obj1.cross[1] * 1000000) / 1000000 === 0);
+assert(Math.round(obj1.cross[2] * 1000000) / 1000000 === 1);
 assert(Math.round(obj1.up[0] * 1000000) / 1000000 === 1);
 assert(Math.round(obj1.up[1] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.up[2] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.look[0] * 1000000) / 1000000 === 0);
 assert(Math.round(obj1.look[1] * 1000000) / 1000000 === 1);
 assert(Math.round(obj1.look[2] * 1000000) / 1000000 === 0);
+
+obj2 = obj1.orientation.toMatrix();
+assert(Math.round(obj2[0] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[1] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[2] * 1000000) / 1000000 === 1);
+assert(Math.round(obj2[4] * 1000000) / 1000000 === 1);
+assert(Math.round(obj2[5] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[6] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[8] * 1000000) / 1000000 === 0);
+assert(Math.round(obj2[9] * 1000000) / 1000000 === 1);
+assert(Math.round(obj2[10] * 1000000) / 1000000 === 0);
 
 // Attitude.toMatrix
 obj2 = new Matrix();
