@@ -27,23 +27,31 @@
  *
  */
 
+// create the xform namespace for running in a browser environment.
+
 /**
- * create the xform namespace for running in a browser environment
+ * All types and functions belong to the xform namespace.
  *
- * @namespace
+ * @namespace xform
  */
 var xform = {};
 
 (function(undefined) {
   'use strict';
 
-  // Set the exports property if this is a CommonJS environment (e.g., node.js)
+  // Set the exports property if this is a CommonJS environment (e.g., node.js).
   if (typeof module !== 'undefined') {
     module.exports = xform;
   }
 
-  /*
-   * The types provided by xform-js
+  /**
+   * @property {constructor} Dimensional
+   * @property {constructor} Dimensions
+   * @property {constructor} Vector
+   * @property {constructor} Matrix
+   * @property {constructor} Quaternion
+   * @property {constructor} Attitude
+   * @property {constructor}  DimensionError
    */
   xform.Dimensional = Dimensional;
   xform.Dimensions = Dimensions;
@@ -52,11 +60,9 @@ var xform = {};
   xform.Quaternion = Quaternion;
   xform.Attitude = Attitude;
   xform.DimensionError = DimensionError;
-  xform.dimCheck = dimCheck;
-  xform.arrayIndexedEntriesEqual = arrayIndexedEntriesEqual;
 
   /**
-   * Adds the xform namespace to the specified context
+   * Adds the xform namespace to the specified context.
    *
    * This function is intended to allow all members of the xform namespace to
    * be added to the global object or any other object.
@@ -64,7 +70,8 @@ var xform = {};
    * NOTE: In node.js if you want to add the xform members to the global object you
    * must pass the object named GLOBAL as the argument.
    *
-   * @param the object that will gain xform's members
+   * @param {Object} - The object that will gain xform's members.
+   * @returns {void}
    */
   xform.usingNamespace = function(object) {
     for (var prop in xform) {
@@ -81,29 +88,15 @@ var xform = {};
    * Common supertype of all types with dimensions.
    *
    * @name Dimensional
-   * @memberof xform
    * @constructor
    * @extends Array
-   * @param {Array} dimensionality An array whose entries represent an index and
-   * whose value is the dimensionality of that index
+   * @param {Array | number} dimensionality - An array whose entries represent an index and
+   * whose value is the dimensionality of that index -or- a number that
+   * represents the dimensionality.
    * @example
    * // Creates a Dimensional with a 3-dimensional index and a 4-dimensional
    * // index, just like a 3x4 Matrix.
    * new Dimensional([3, 4]);
-   */
-  /**
-   * Common supertype of all types with dimensions.
-   *
-   * @name Dimensional^2
-   * @memberof xform
-   * @constructor
-   * @extends Array
-   * @param {number} dimensionality A number that represents the dimensionality
-   * of a Dimensional with only one index
-   * @example
-   * // Creates a Dimensinoal with one 4-dimensional index,
-   * // just like a 4-dimensional Vector
-   * new Dimensional(4);
    */
   function Dimensional(dimensionality) {
     dimensionality = dimensionality || null;
@@ -117,9 +110,17 @@ var xform = {};
       throw new TypeError(msg + type);
     }
   }
+
   Dimensional.prototype = Object.create(Array.prototype);
   Dimensional.prototype.constructor = Dimensional;
 
+  /**
+   * @name equals
+   * @memberof Dimensional.prototype
+   * @function
+   * @param {Array} array - The array to compare this Dimensional to.
+   * @returns {boolean} True if all entries are equal, false otherwise.
+   */
   Dimensional.prototype.equals = function(array) {
     if (array instanceof Dimensional) {
       if (this.dim.equals(array.dim) && arrayIndexedEntriesEqual(this, array)) {
@@ -145,6 +146,17 @@ var xform = {};
     }
   };
 
+  /**
+   * Represents the dimensionality of a type.
+   *
+   * @name Dimensions
+   * @class
+   * @extends Array
+   * @param {Array | number} arrayOrNumber- Array whose entries represent the number
+   * of dimensions of each index -or- for convenience, a number that represents the dimensions of
+   * an object with one index
+   */
+
   function Dimensions(arrayOrNumber) {
     arrayOrNumber = arrayOrNumber || null;
     if (typeof arrayOrNumber === 'number') {
@@ -162,10 +174,25 @@ var xform = {};
   Dimensions.prototype = Object.create(Array.prototype);
   Dimensions.prototype.constructor = Dimensions;
 
-  Dimensions.prototype.equals = function(dimensionsObj) {
-    return arrayIndexedEntriesEqual(this, dimensionsObj);
+  /**
+   * @name equals
+   * @memberof Dimensions.prototype
+   * @function
+   * @param {Dimensions} dimensions - The Dimensions to compare this Dimensions to.
+   * @returns {boolean} True if the Dimensions are equal, false otherwise.
+   *
+   */
+  Dimensions.prototype.equals = function(dimensions) {
+    return arrayIndexedEntriesEqual(this, dimensions);
   };
 
+  /**
+   * @name set
+   * @memberof Dimensions.prototype
+   * @function
+   * @param {Array} array - The array whose entries will be set in this Dimensional.
+   * @returns {Dimensions} This Dimensions.
+   */
   Dimensions.prototype.set = function(array) {
     this.length = array.length;
     for (var i = 0, len = array.length; i < len; ++i) {
@@ -178,21 +205,12 @@ var xform = {};
    * General vector type.
    *
    * @name Vector
-   * @memberof xform
-   * @constructor
+   * @class
    * @extends Dimensional
-   * @param {Array} values An array whose entries will become the values of the
-   * vector. The vector's dimension will be set to the array's length
-   */
-  /**
-   * General vector type
-   *
-   * @name Vector^2
-   * @memberof xform
-   * @constructor
-   * @extends Dimensional
-   * @param {number} dimension The vector's dimension will be set to this value.
-   * Each of the vector's entries will be set to zero.
+   * @param {Array | number} arrayOrNumber - An array whose entries will become the values of the
+   * vector. The vector's dimension will be set to the array's length -or- a
+   * number that will set the Vector's value. Each of the Vector's entries will
+   * be set to zero.
    */
   function Vector(dimOrArray) {
     var dimension = (dimOrArray instanceof Array) ? dimOrArray.length : dimOrArray;
@@ -215,7 +233,13 @@ var xform = {};
   Vector.prototype.constructor = Vector;
 
   /**
-   * @static
+   * @name copy
+   * @memberof Vector
+   * @function
+   * @param {Vector} vector - The Vector to copy from.
+   * @param {Vector} [out] - The Vector to copy to. If undefined, a
+   * new Vector is created.
+   * @returns {Vector} The out vector.
    */
   Vector.copy = function(vector, out) {
     if (out == null) {
@@ -230,10 +254,23 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name flatten
+   * @memberof Vector
+   * @function
+   * @param {Array} arrayOfVectors - An array of Vectors.
+   * @param {constructor} [arrayType = Float32Array] - The type of Array to create. This method
+   * can create typed arrays.
+   * @returns {Array | TypedArray} a new Array or TypedArray who will be filled
+   * with the values of the Vectors.
+   */
   Vector.flatten = function(arrayOfVectors, arrayType) {
+    arrayType = arrayType || Float32Array;
+
     var arr = arrayOfVectors.reduce(function(sum, ele) {
       return sum.concat(ele.toArray());
     }, []);
+
     if (arrayType === Array) {
       return arr;
     } else {
@@ -241,6 +278,15 @@ var xform = {};
     }
   };
 
+  /**
+   * @name dot
+   * @memberof Vector
+   * @function
+   * @throws {DimensionError} if the dimension of vec1 and vec2 are not equal.
+   * @param {Vector} vec1 - The first Vector.
+   * @param {Vector} vec2 - The second Vector.
+   * @returns {number} The dot product of the two Vectors.
+   */
   Vector.dot = function(vec1, vec2) {
     dimCheck(vec1, vec2);
     var out = 0;
@@ -251,6 +297,18 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name cross
+   * @memberof Vector
+   * @function
+   * @throws {DimensionError} if vec1 and vec2 are not 3-dimensional Vectors.
+   * @param {Vector} vec1 - The first Vector.
+   * @param {Vector} vec2 - The second Vector.
+   * @param {Vector} [out] - The Vector that will contain the result
+   * of the cross product of the two Vectors. If undefined, a new Vector is
+   * created.
+   * @returns {Vector} The out Vector.
+   */
   Vector.cross = function(vec1, vec2, out) {
     if (vec1.length !== 3 || vec2.length !== 3) {
       throw new DimensionError("Cross product is only defined for three-dimensional vectors.");
@@ -267,6 +325,15 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name quadrance
+   * @memberof Vector
+   * @function
+   * @throws {DimensionError} if the dimension of vec1 and vec2 are not equal.
+   * @param {Vector} vec1 - The first Vector.
+   * @param {Vector} vec2 - The second Vector.
+   * @returns {number} The quadrance of the two Vectors.
+   */
   Vector.quadrance = function(vec1, vec2) {
     vec2 = vec2 || vec1;
     dimCheck(vec1, vec2);
@@ -278,33 +345,81 @@ var xform = {};
     return out;
   };
 
+  /**
+   * Set the value of every entry of this Vector to 0.
+   *
+   * @name zero
+   * @memberof Vector.prototype
+   * @function
+   * @returns {Vector} This Vector.
+   */
   Vector.prototype.zero = function() {
     for (var i = 0, len = this.length; i < len; ++i) {
       this[i] = 0;
     }
   };
 
+  /**
+   * @name dot
+   * @memberof Vector.prototype
+   * @function
+   * @param {Vector} vec - The Vector.
+   * @returns {number} The dot product of this Vector and vec
+   */
   Vector.prototype.dot = function(vec) {
     return Vector.dot(this, vec);
   }
 
-  Vector.prototype.quadrance = function(vector) {
-    return Vector.quadrance(this, vector);
+  /**
+   * @name quadrance
+   * @memberof Vector.prototype
+   * @function
+   * @param {Vector} vec - The Vector.
+   * @returns {number} The quadrance of this Vector and vector.
+   */
+  Vector.prototype.quadrance = function(vec) {
+    return Vector.quadrance(this, vec);
   };
 
+  /**
+   * @name magnitude
+   * @memberof Vector.prototype
+   * @function
+   * @returns {number} The magnitude (length) of this Vector.
+   */
   Vector.prototype.magnitude = function() {
     return Math.sqrt(Vector.quadrance(this));
   };
 
-  Vector.prototype.add = function(vector) {
-    dimCheck(this, vector);
+  /**
+   * Adds each entry of vec to the corresponding entries of this Vector.
+   *
+   * @name add
+   * @memberof Vector.prototype
+   * @function
+   * @throws {DimensionError} if the dimension of this Vector and vec are not equal.
+   * @param {Vector} vec - The Vector
+   * @returns {Vector} This Vector.
+   */
+  Vector.prototype.add = function(vec) {
+    dimCheck(this, vec);
     var len = this.length;
     for (var i = 0; i < len; ++i) {
-      this[i] += vector[i];
+      this[i] += vec[i];
     }
     return this;
   };
 
+  /**
+   * Scales each entry of this Vector by scalar.
+   *
+   * @name scale
+   * @memberof Vector.prototype
+   * @function
+   * @throws {TypeError} if scalar is not of type number.
+   * @param {number} scalar - The scalar.
+   * @returns {Vector} This Vector.
+   */
   Vector.prototype.scale = function(scalar) {
     if (typeof scalar !== 'number') {
       throw new TypeError("argument to Vector.scale must be of type number.");
@@ -316,6 +431,23 @@ var xform = {};
     return this;
   };
 
+  /**
+   * @name set
+   * @memberof Vector.prototype
+   * @function
+   * @throws {DimensionError} if the dimension of this Vector and array are not equal.
+   * @param {array} array - The array.
+   * @returns {Vector} this Vector
+   */
+  /**
+   * @name set^2
+   * @memberof Vector.prototype
+   * @function
+   * @throws {DimensionError} if the dimension of this Vector and the number of
+   * varargs are not equal.
+   * @param {...number} varargs - Numbers this Vectors entries will be set from.
+   * @returns {Vector} This Vector.
+   */
   Vector.prototype.set = function(arrayOrVarargs) {
     var vals = (arguments.length === 1) ? arguments[0] : arguments;
     if (vals.length == null) {
@@ -328,6 +460,14 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Normalizes this Vector.
+   *
+   * @name normalize
+   * @memberof Vector.prototype
+   * @function
+   * @returns {Vector} This Vector.
+   */
   Vector.prototype.normalize = function() {
     var mag = this.magnitude();
     for (var i = 0, len = this.length; i < len; ++i) {
@@ -336,14 +476,27 @@ var xform = {};
     return this;
   }
 
-  // This handles some edge cases such as Array.concat
-  // in which a subtype of Array is not considered an Array
+  /**
+   * This handles some edge cases such as Array.concat in which a subtype of Array
+   * is not considered an Array.
+   *
+   * @name toArray
+   * @memberof Vector.prototype
+   * @function
+   * @returns {Array} An Array whose entries are set from this Vector.
+   */
   Vector.prototype.toArray = function() {
     return this.map(function(ele) {
       return ele;
     });
   };
 
+  /**
+   * @name toString
+   * @memberof Vector.prototype
+   * @function
+   * @returns {string} A string representation of this Vector.
+   */
   Vector.prototype.toString = function() {
     return '( ' + this.reduce(function(sum, ele) {
       return sum + ', ' + ele;
@@ -353,9 +506,11 @@ var xform = {};
   /**
    * General matrix type.
    *
+   * This Matrix type stores values in column-major order, so a Matrix must be
+   * transposed before sending its values to an OpenGL shader.
+   *
    * @name Matrix
-   * @memberof xform
-   * @constructor
+   * @class
    * @extends Dimensional
    * @param {number} m The number of rows in the matrix.
    * @param {number} n The number of columns in the matrix.
@@ -379,6 +534,18 @@ var xform = {};
   Matrix.cache1 = new Matrix(4, 4);
   Matrix.cache2 = new Matrix(4, 4);
 
+  /**
+   * @name mul
+   * @memberof Matrix
+   * @function
+   * @throws {TypeError} if mat2 is not an instance of Matrix or Vector.
+   * @throws {DimensionError} if mat1 and mat2 are not compatable for multiplication.
+   * @param {Matrix} mat1 - The left Matrix.
+   * @param {matrix | Vector} mat2 - The right Matrix.
+   * @param {Matrix | undefined} out - The result of the matrix multiplication.
+   * If undefined, a new Matrix is created.
+   * @returns {Matrix} The out matrix.
+   */
   Matrix.mul = function(mat1, mat2, out) {
     var m1, m2, n1, n2;
 
@@ -423,6 +590,15 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name copy
+   * @memberof Matrix
+   * @function
+   * @param {Matrix} matrix - The matrix that will be copied.
+   * @param {Matrix} [out] - The Matrix to copy into. If undefined, a
+   * new Matrix is created.
+   * @returns {Matrix} The out Matrix.
+   */
   Matrix.copy = function(matrix, out) {
     if (out == null) {
       out = new Matrix(matrix.dim[0], matrix.dim[1]);
@@ -436,6 +612,14 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name det
+   * @memberof Matrix
+   * @function
+   * @throws {DimensionError} if matrix is not square.
+   * @param {Matrix} matrix - The Matrix.
+   * @returns {number} The determinant of matrix.
+   */
   Matrix.det = function(matrix) {
     if (matrix.dim[0] !== matrix.dim[1]) {
       var msg = 'determinant is only defined for square matrices';
@@ -475,6 +659,18 @@ var xform = {};
     return det;
   };
 
+  /**
+   * @name invert
+   * @memberof Matrix
+   * @function
+   * @throws {ReferenceError} if matrix is undefined.
+   * @throws {DimensionError} if matrix is not square.
+   * @throws {RangeError} if matrix is singular.
+   * @param {Matrix} matrix - The matrix to invert.
+   * @param {Matrix} [out] - The Matrix whose entries will be set to the inverse
+   * of matrix. If undefined, a new Matrix will be created.
+   * @returns {Matrix} The out Matrix.
+   */
   Matrix.invert = function(matrix, out) {
     if (typeof matrix === 'undefined') {
       var msg = 'First argument to Matrix.invert is undefined';
@@ -524,6 +720,20 @@ var xform = {};
     return out.transpose();
   };
 
+  /**
+   * Finds a minor of a Matrix. The index arguments begin at 0, so to remove the
+   * first row of matrix, pass 0 as the argument to di.
+   *
+   * @name minor
+   * @memberof Matrix
+   * @function
+   * @param {Matrix} matrix - The matrix.
+   * @param {number} di - The index of the row to be removed from matrix.
+   * @param {number} dj - The index of the column to be removed from matrix.
+   * @param {Matrix} [out] - The matrix whose Dimensions and entries will be set
+   * to the specified minor of matrix. If undefined, a new Matrix is created.
+   * @returns {Matrix} The out Matrix.
+   */
   Matrix.minor = function(matrix, di, dj, out) {
     var m = matrix.dim[0];
     var n = matrix.dim[1];
@@ -550,6 +760,16 @@ var xform = {};
     return out.set(arr);
   };
 
+  /**
+   * @name set
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {RangeError} if array.length + offset > the number of entries in this Matrix.
+   * @param {Array} array - The array whose values will be set in this Matrix.
+   * @param {number} [offset] - The offset to begin filling. If
+   * undefined, offset will be set to 0.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.set = function(array, offset) {
     offset = offset || 0;
     if (array.length + offset > this.length) {
@@ -563,13 +783,33 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Sets the ij entry of this Matrix. The index arguments begin at 1, so to set
+   * the entry in the second row and third column, pass 2 and 3 as the arguments
+   * to i and j, respectively.
+   *
+   * @name setEntry
+   * @memberof Matrix.prototype
+   * @function
+   * @param {number} m - The row index.
+   * @param {number} n - The column index.
+   * @param {number} val - The value.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.setEntry = function(m, n, val) {
     this[n - 1 + (m - 1) * this.dim[1]] = val;
     return this;
   };
 
-  // allows seting a non-sqaure matrix to its analog of the identity matrix
-  // (i.e., acts like the Kronecker delta over the indicies)
+  /**
+   * Sets this Matrix to the identity matrix or its analogue of this Matrix os
+   * not square. (i.e., acts like the Kronecker delta over the indicies)
+   *
+   * @name identity
+   * @memberof Matrix.prototype
+   * @function
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.identity = function() {
     var m = this.dim[0];
     var n = this.dim[1];
@@ -581,6 +821,14 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Sets every entry of this Matrix to 0.
+   *
+   * @name zero
+   * @memberof Matrix.prototype
+   * @function
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.zero = function() {
     var len = this.dim[0] * this.dim[1];
     for (var i = 0; i < len; ++i) {
@@ -589,12 +837,28 @@ var xform = {};
     return this;
   }
 
+  /**
+   * Multiplies this Matrix by matrix.
+   *
+   * @name mul
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {ReferenceError} if matrix is undefined.
+   * @throws {TypeError} if matrix is not an instance of Matrix.
+   * @throws {DimensionError} if this Matrix and matrix are not compatable for
+   * multiplication.
+   * @param {Matrix} matrix - The right-side multiplicand.
+   * @returns {Matrix} - This Matrix.
+   */
   Matrix.prototype.mul = function(matrix) {
     var m1 = this.dim[0];
     var n1 = this.dim[1];
     var m2, n2;
 
-    if (matrix instanceof Matrix) {
+    if (typeof matrix === 'undefined') {
+      var msg = 'Argument to Matrix.prototype.mul must be defined.';
+      throw new ReferenceError(msg);
+    } else if (matrix instanceof Matrix) {
       m2 = matrix.dim[0];
       n2 = matrix.dim[1];
     } else {
@@ -625,10 +889,24 @@ var xform = {};
     return this;
   };
 
+  /**
+   * @name det
+   * @memberof Matrix.prototype
+   * @function
+   * @returns {number} The determinant of this Matrix.
+   */
   Matrix.prototype.det = function() {
     return Matrix.det(this);
   };
 
+  /**
+   * Inverts this Matrix.
+   *
+   * @name invert
+   * @memberof Matrix.prototype
+   * @function
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.invert = function() {
     var cache = Matrix.cache2;
     cache.dim[0] = this.dim[0];
@@ -637,6 +915,14 @@ var xform = {};
     return Matrix.invert(cache, this);
   };
 
+  /**
+   * Transposes this Matrix.
+   *
+   * @name transpose
+   * @memberof Matrix.prototype
+   * @function
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.transpose = function() {
     var len = this.length;
     var m = this.dim[0];
@@ -657,7 +943,18 @@ var xform = {};
     return this;
   };
 
-  // must be 4x4 matrix
+  /**
+   * Sets this matrix as a view Matrix.
+   *
+   * @name asView
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not a 4x4 Matrix.
+   * @throws {TypeError} if position is not and instance of Array.
+   * @param {Array} position - An array containing the starting x, y, and z
+   * coordinates of this view Matrix.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.asView = function(position) {
     dimCheck(this, {
       dim: [4, 4]
@@ -675,7 +972,21 @@ var xform = {};
     return this;
   }
 
-  // must be 4x4 matrix
+  /**
+   * @name asOrtographic
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not a 4x4 Matrix.
+   * @throws {RangeError} if the arguments to right and left, top and bottom, or
+   * far and near are equal.
+   * @param {number} left - The x coordinate of the left frustum plane.
+   * @param {number} right - The x coordinate of the right frustum plane.
+   * @param {number} bottom - The y coordinate of the bottom frustum plane.
+   * @param {number} top - The y coordinate of the top frustum plane.
+   * @param {number} near - The z coordinate of the near frustum plane.
+   * @param {number} far - The z coordinate of the far frustum plane.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.asOrthographic = function(left, right, bottom, top, near, far) {
     try {
       dimCheck(this, {
@@ -713,7 +1024,21 @@ var xform = {};
     return this;
   };
 
-  // must be 4x4 matrix
+  /**
+   * @name asPerspective
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not a 4x4 Matrix.
+   * @throws {RangeError} if the arguments to near and far are equal or if
+   * the argument to aspect is 0.
+   * @param {number} near - The distance from the camera to the near clipping
+   * plane.
+   * @param {number} far - The distance from the camera to the far clipping
+   * plane.
+   * @param {number} aspect - The aspect ratio.
+   * @param {number} fov - The field of view angle.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.asPerspective = function(near, far, aspect, fov) {
     try {
       dimCheck(this, {
@@ -753,6 +1078,32 @@ var xform = {};
     return this;
   };
 
+  /**
+   * If this Matrix is a 2x2 Matrix, sets this Matrix as a non-homogeneous
+   * rotation Matrix. Else if this Matrix is a 3x3 Matrix, sets this Matrix as a
+   * homogeneous rotation Matrix.
+   *
+   * @name asRotation
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix not square or if it is not a 2x2 or
+   * 3x3 Matrix.
+   * @param {number} angle - The angle of rotation.
+   * @returns {Matrix} This Matrix.
+   */
+  /**
+   * If this Matrix is a 3x3 Matrix, sets this Matrix as a non-homogeneous
+   * rotation Matrix. Else if this Matrix is a 4x4 Matrix, sets this Matrix as a
+   * homogeneous rotation Matrix.
+   *
+   * @name asRotation^2
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not square or if it is not a 3x3 or 4x4 Matrix.
+   * @param {Array} axis - The axis of rotation.
+   * @param {number} angle - The angle of rotation.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.asRotation = function() {
 
     if (this.dim[0] > 4 || this.dim[1] > 4) {
@@ -860,6 +1211,16 @@ var xform = {};
     return this;
   }
 
+  /**
+   * @name asTranslation
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not square, if this Matrix is a
+   * 2x2 Matrix, or if the array argument's length is not one less than the
+   * number of columns in this Matrix.
+   * @param {Array} array - An array containing the x, y, [...] translation coordinates.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.asTranslation = function(vector) {
     var m = this.dim[0];
     var n = this.dim[1];
@@ -888,7 +1249,29 @@ var xform = {};
     return this;
   };
 
-  // supports all dimensions
+  /**
+   * Sets the scale values for each dimension or this matrix to the values of
+   * array.
+   *
+   * @name asScale
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {RangeError} if the array argument's length is not one less than
+   * the number of columns in this Matrix.
+   * @param {Array} array - An array containing the x, y, [...] scale values.
+   * @returns {Matrix} This Matrix.
+   */
+  /**
+   * Sets the scale values for each dimension of this matrix to the value of the
+   * number argument.
+   *
+   * @name asScale^2
+   * @memberof Matrix.prototype
+   * @function
+   * @param {number} number - The number to set as the scale value for each
+   * dimension of this Matrix.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.asScale = function(arrayOrScalar) {
     var m = this.dim[0];
     var n = this.dim[1];
@@ -913,9 +1296,30 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Rotates this Matrix by angle.
+   *
+   * @name rotate
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix not square or if it is not a 2x2 or
+   * 3x3 Matrix.
+   * @param {number} angle - The angle of rotation.
+   * @returns {Matrix} This Matrix.
+   */
+  /**
+   * Rotates this Matrix around axis by angle.
+   *
+   * @name rotate
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not square or if it is not a 3x3 or 4x4 Matrix.
+   * @param {Array} axis - The axis of rotation.
+   * @param {number} angle - The angle of rotation.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.rotate = function(axis, angle) {
     Matrix.cache2.dim.set(this.dim);
-    i
     try {
       this.mul(Matrix.cache2.asRotation(axis, angle));
     } catch (e) {
@@ -926,6 +1330,17 @@ var xform = {};
     return this;
   }
 
+  /**
+   * @name translate
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {DimensionError} if this Matrix is not square, if this Matrix is a
+   * 2x2 Matrix, or if the array argument's length is not one less than the
+   * number of columns in this Matrix.
+   * @param {Vector} vector - A vector whose entries represent the x, y, [...]
+   * translation values.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.translate = function(vector) {
     Matrix.cache2.dim.set(this.dim);
     try {
@@ -938,6 +1353,27 @@ var xform = {};
     return this;
   }
 
+  /**
+   * Scales this Matrix by the values of array.
+   *
+   * @name scale
+   * @memberof Matrix.prototype
+   * @function
+   * @throws {RangeError} if the array argument's length is not one less than
+   * the number of columns in this Matrix.
+   * @param {Array} array - An array containing the x, y, [...] scale values.
+   * @returns {Matrix} This Matrix.
+   */
+  /**
+   * Scales each dimension of this matrix by the value of the number argument.
+   *
+   * @name scale^2
+   * @memberof Matrix.prototype
+   * @function
+   * @param {number} number - The number to set as the scale value for each
+   * dimension of this Matrix.
+   * @returns {Matrix} This Matrix.
+   */
   Matrix.prototype.scale = function(arrayOrScalar) {
     Matrix.cache2.dim.set(this.dim);
     try {
@@ -950,7 +1386,12 @@ var xform = {};
     return this;
   }
 
-  // supports all dimensions
+  /**
+   * @name toString
+   * @memberof Matrix.prototype
+   * @function
+   * @returns {string} A string representation of this Matrix.
+   */
   Matrix.prototype.toString = function() {
     var str = '';
     var m = this.dim[0];
@@ -977,8 +1418,7 @@ var xform = {};
    * Quaternion type.
    *
    * @name Quaternion
-   * @memberof xform
-   * @constructor
+   * @class
    * @extends Dimensional
    */
   function Quaternion() {
@@ -995,6 +1435,16 @@ var xform = {};
   Quaternion.cache1 = new Quaternion(4);
   Quaternion.cache2 = new Quaternion(4);
 
+  /**
+   * @name mul
+   * @memberof Quaternion
+   * @function
+   * @param {Quaternion} q1 - The left multiplicand.
+   * @param {Quaternion} q2 - The right multiplicand.
+   * @param {Quaternion} [out] - The Quaternion to store the result of
+   * the multiplication. If undefined, a new Quaternion is created.
+   * @returns {Quaternion} The out Quaternion.
+   */
   Quaternion.mul = function(q1, q2, out) {
     out = out || new Quaternion();
     var q1V = q1.v;
@@ -1017,6 +1467,15 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name invert
+   * @memberof Quaternion
+   * @function
+   * @param {Quaternion} quaternion - The Quaternion to invert.
+   * @param {Quaternion} [out] - The Quaternion to store the result of the inversion.
+   * If undefined, a new Quaternion is created.
+   * @returns {Quaternion} The out Quaternion.
+   */
   Quaternion.invert = function(quaternion, out) {
     out = out || new Quaternion();
 
@@ -1031,12 +1490,21 @@ var xform = {};
     return out;
   };
 
-  Quaternion.conjugate = function(qin, out) {
+  /**
+   * @name conjugate
+   * @memberof Quaternion
+   * @function
+   * @param {Quaternion} quaternion - The Quaterion.
+   * @param {Quaternion} [out] - The Quaternion to store the conjugate
+   * in. If undefined, a new Quaternion is created.
+   * @returns {Quaternion} The out Quaternion.
+   */
+  Quaternion.conjugate = function(quaternion, out) {
     out = out || new Quaternion();
-    var vin = qin.v;
+    var vin = quaternion.v;
     var vout = out.v;
 
-    out.t = qin.t;
+    out.t = quaternion.t;
     vout[0] = -vin[0];
     vout[1] = -vin[1];
     vout[2] = -vin[2];
@@ -1044,15 +1512,35 @@ var xform = {};
     return out;
   };
 
+  /**
+   * @name quadrance
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {number} The quadrance of this Quaternion.
+   */
   Quaternion.prototype.quadrance = function() {
     var v = this.v;
     return this.t * this.t + v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
   };
 
+  /**
+   * @name length
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {number} The length (magnitude) of this Quaternion.
+   */
   Quaternion.prototype.length = function() {
     return Math.sqrt(this.quadrance());
   };
 
+  /**
+   * Inverts this Quaternion.
+   *
+   * @name invert
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {Quaternion} This Quaternion.
+   */
   Quaternion.prototype.invert = function() {
     var v = this.v;
     var quad = this.quadrance();
@@ -1063,11 +1551,27 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Conjugates this Quaternion.
+   *
+   * @name conjugate
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {Quaternion} This Quaternion.
+   */
   Quaternion.prototype.conjugate = function() {
     this.v.scale(-1);
     return this;
   };
 
+  /**
+   * Normalizes this Quaternion.
+   *
+   * @name normalize
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {Quaternion} This Quaternion
+   */
   Quaternion.prototype.normalize = function() {
     var len = this.length();
 
@@ -1077,6 +1581,15 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Rotates a Vector by this Quaternion.
+   *
+   * @name rotate
+   * @memberof Quaternion.prototype
+   * @function
+   * @param {Vector} vector - The Vector to rotate by this Quaternion.
+   * @returns {Vector} The rotated Vector.
+   */
   Quaternion.prototype.rotate = function(vector) {
     var v = this.v;
     var t = this.t;
@@ -1088,6 +1601,15 @@ var xform = {};
     return vector;
   };
 
+  /**
+   * Rotates this Quaternion by quaternion.
+   *
+   * @name mul
+   * @memberof Quaternion.prototype
+   * @function
+   * @param {Quaternion} quaternion - The right-side multiplicand.
+   * @returns {Quaternion} This Quaternion.
+   */
   Quaternion.prototype.mul = function(quaternion) {
     var thisV = this.v;
     var otherV = quaternion.v;
@@ -1108,6 +1630,18 @@ var xform = {};
     return this;
   };
 
+  /**
+   * Sets the orientation of this Quaternion to a rotation of angle around axis.
+   *
+   * @name setAxisAngle
+   * @memberof Quaternion.prototype
+   * @function
+   * @throws {TypeError} if axis is not an instance of Array or if angle is not
+   * of type number.
+   * @param {Array} axis - The axis of rotation.
+   * @param {number} angle - The angle of rotation.
+   * @returns {Quaternion} This Quaternion.
+   */
   Quaternion.prototype.setAxisAngle = function(axis, angle) {
     if (!(axis instanceof Array)) {
       var msg = 'Quaternion.prototype.setAxisAngle axis argument must be an instance of Array';
@@ -1123,6 +1657,16 @@ var xform = {};
     return this;
   };
 
+  /**
+   * @name toMatrix
+   * @memberof Quaternion.prototype
+   * @function
+   * @throws {DimensionError} if matrix is not a 3x3 matrix, 4x4 matrix, or undefined.
+   * @param {Matrix} [matrix] - The matrix to be set as a
+   * rotation-matrix representation of this Quaternion. If undefined, a new
+   * Matrix is created.
+   * @returns {Matrix} The Matrix.
+   */
   Quaternion.prototype.toMatrix = function(matrix) {
     if (typeof matrix === 'undefined') {
       matrix = new Matrix();
@@ -1186,14 +1730,34 @@ var xform = {};
     return matrix;
   };
 
+  /**
+   * @name toTVArray
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {Array} An array representation of this Quaternion with
+   * coordinates in the folling order: [w, x, y, z].
+   */
   Quaternion.prototype.toTVArray = function() {
     return [this.t, this.v[0], this.v[1], this.v[2]];
   };
 
+  /**
+   * @name toVTArray
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {Array} An array representation of this Quaternion with
+   * coordinates in the following order: [x, y, z, w].
+   */
   Quaternion.prototype.toVTArray = function() {
     return [this.v[0], this.v[1], this.v[2], this.t];
   };
 
+  /**
+   * @name toString
+   * @memberof Quaternion.prototype
+   * @function
+   * @returns {string} A string representation of this Quaternion.
+   */
   Quaternion.prototype.toString = function() {
     return 'r: ' + this.t + ', i: [ ' + this.v[0] + ', ' + this.v[1] + ', ' + this.v[2] + ' ]';
   };
@@ -1204,8 +1768,7 @@ var xform = {};
    * Uses a quaternion and an orthogonal 3x3 matrix under the hood.
    *
    * @name Attitude
-   * @memberof xform
-   * @constructor
+   * @class
    * @extends Dimensional
    */
   function Attitude() {
@@ -1217,6 +1780,22 @@ var xform = {};
     // longitudinal axis basis
     this[2] = new Vector([0, 0, 1]);
 
+    /**
+     * A quaternion representing the orientation of this Attitude.
+     *
+     * @name orientation
+     * @memberof Attitude
+     * @instance
+     */
+    this.orientation = new Quaternion();
+
+    /**
+     * The cross Vector.
+     *
+     * @name cross
+     * @memberof Attitude
+     * @instance
+     */
     Object.defineProperty(this, 'cross', {
       get: function() {
         return this[0];
@@ -1226,6 +1805,13 @@ var xform = {};
       }
     });
 
+    /**
+     * The up Vector.
+     *
+     * @name up
+     * @memberof Attitude
+     * @instance
+     */
     Object.defineProperty(this, 'up', {
       get: function() {
         return this[1];
@@ -1235,6 +1821,13 @@ var xform = {};
       }
     });
 
+    /**
+     * The look Vector
+     *
+     * @name look
+     * @memberof Attitude
+     * @instance
+     */
     Object.defineProperty(this, 'look', {
       get: function() {
         return this[2];
@@ -1246,8 +1839,19 @@ var xform = {};
   }
   Attitude.prototype = Object.create(Dimensional.prototype);
   Attitude.prototype.constructor = Attitude;
-  Attitude.quaternion = new Quaternion();
+  Attitude.rotator = new Quaternion();
 
+  /**
+   * @name toMatrix
+   * @memberof Attitude
+   * @function
+   * @throws {DimensionError} if matrix argument is not a 3x3 Matrix, a 4x4
+   * Matrix, or undefined.
+   * @param {Attitude} attitude - The Attitude.
+   * @param {Matrix} [matrix] - the Matrix to be set as a rotation-matrix
+   * representation of attitude. If undefined, creates a new Matrix.
+   * @returns {Matrix} - The matrix.
+   */
   Attitude.toMatrix = function(attitude, matrix) {
     if (typeof matrix === 'undefined') {
       matrix = new Matrix();
@@ -1285,30 +1889,74 @@ var xform = {};
     return matrix;
   };
 
+  /**
+   * Rotates this Attitude around its cross axis by theta.
+   *
+   * @name pitch
+   * @memberof Attitude.prototype
+   * @function
+   * @param {number} theta - The angle of rotation.
+   * @returns {Attitude} This Attitude.
+   */
   Attitude.prototype.pitch = function(theta) {
-    var quaternion = Attitude.quaternion;
-    quaternion.setAxisAngle(this[0], -theta);
-    quaternion.rotate(this[1]);
-    quaternion.rotate(this[2]);
+    var rotator = Attitude.rotator;
+    rotator.setAxisAngle(this[0], -theta);
+    rotator.rotate(this[1]);
+    rotator.rotate(this[2]);
+    rotator.setAxisAngle(this[0], theta);
+    this.orientation.mul(rotator);
     return this;
   }
 
+  /**
+   * Rotates this Attitude around its up axis by theta.
+   *
+   * @name yaw
+   * @memberof Attitude.prototype
+   * @function
+   * @param {number} theta - The angle or rotation.
+   * @returns {Attitude} This Attitude.
+   */
   Attitude.prototype.yaw = function(theta) {
-    var quaternion = Attitude.quaternion;
-    quaternion.setAxisAngle(this[1], -theta);
-    quaternion.rotate(this[0]);
-    quaternion.rotate(this[2]);
+    var rotator = Attitude.rotator;
+    rotator.setAxisAngle(this[1], -theta);
+    rotator.rotate(this[0]);
+    rotator.rotate(this[2]);
+    rotator.setAxisAngle(this[1], theta);
+    this.orientation.mul(rotator);
     return this;
   }
 
+  /**
+   * Rotates this Attitude around its look axis by theta.
+   *
+   * @name roll
+   * @memberof Attitude.prototype
+   * @function
+   * @param {number} theta - The angle of rotation.
+   * @returns {Attitude} This Attitude.
+   */
   Attitude.prototype.roll = function(theta) {
-    var quaternion = Attitude.quaternion;
-    quaternion.setAxisAngle(this[2], -theta);
-    quaternion.rotate(this[0]);
-    quaternion.rotate(this[1]);
+    var rotator = Attitude.rotator;
+    rotator.setAxisAngle(this[2], -theta);
+    rotator.rotate(this[0]);
+    rotator.rotate(this[1]);
+    rotator.setAxisAngle(this[2], theta);
+    this.orientation.mul(rotator);
     return this;
   }
 
+  /**
+   * @name toMatrix
+   * @memberof Attitude.prototype
+   * @function
+   * @throws {ReferenceError} if matrix argument is undefined.
+   * @throws {DimensionError} if matrix argument is not a 3x3 Matrix or a 4x4
+   * Matrix.
+   * @param {Matrix} matrix - The Matrix to set as a rotation-matrix
+   * representation of this Attitude.
+   * @returns {Matrix} The Matrix.
+   */
   Attitude.prototype.toMatrix = function(matrix) {
     if (typeof Matrix === 'undefined') {
       var msg = 'Attitude.prototype.toMatrix matrix argument must be defined. ';
@@ -1318,6 +1966,14 @@ var xform = {};
     return Attitude.toMatrix(this, matrix);
   };
 
+  /**
+   * @name rotate
+   * @memberof Attitude.prototype
+   * @function
+   * @throws {ReferenceError} if matrix argument is undefined.
+   * @param {Matrix} matrix - The Matrix to rotate by this Attitude
+   * @returns {matrix} The matrix.
+   */
   Attitude.prototype.rotate = function(matrix) {
     var cache = Matrix.cache2;
     cache.dim[0] = matrix.dim[0];
@@ -1327,16 +1983,28 @@ var xform = {};
     return matrix.mul(cache);
   };
 
+  /**
+   * @name toString
+   * @memberof Attitude.prototype
+   * @function
+   * @returns {string} A string representation of this Attitude.
+   */
   Attitude.prototype.toString = function() {
     return this.cross.toString() + "\n " + this.up.toString() + "\n " + this.look.toString();
   };
 
-
   /**
    * @name DimensionError
+   * @class
+   * @extends Error
+   * @param {string} message - The message property of this DimensionError.
    */
   /**
    * @name DimensionError^2
+   * @class
+   * @extends Error
+   * @param {Array | number} obj1 - The first object with mismatched dimensions.
+   * @param {Array | number} obj2 - The second object with mismatched dimensions.
    */
   function DimensionError(obj1, obj2) {
     if (typeof obj1 === 'string') {
@@ -1386,7 +2054,16 @@ var xform = {};
   DimensionError.prototype = Object.create(Error.prototype);
   DimensionError.prototype.constructor = DimensionError;
 
-  function dimCheck(obj1, obj2) {
+  /**
+   * Checks the dimensions of two objects and throws a DimensionError if they do
+   * not match.
+   *
+   * @throws {DimensionError} if the dimensions of obj1 and obj2 do not match.
+   * @param {Array | number} obj1 - The first object (or number) to compare.
+   * @param {Array | number} obj2 - The second object (or number) to compare.
+   * @returns {void}
+   */
+  xform.dimCheck = function(obj1, obj2) {
     if (obj1.dim != null) {
       var dim = obj2.dim || [obj2.length];
       if (!obj1.dim.equals(dim)) {
@@ -1402,9 +2079,14 @@ var xform = {};
     }
   }
 
-  // this array and one array parameter or
-  // two array parameters
-  function arrayIndexedEntriesEqual(arr1, arr2) {
+  /**
+   * Performs a deep comparison of the entries of two Array-like objects.
+   *
+   * @param {Array} arr1 - The first Array-like object to compare.
+   * @param {Array} arr2 - The second Array-like object to compare.
+   * @returns {boolean} True if all entries are equal, false otherwise.
+   */
+  xform.arrayIndexedEntriesEqual = function(arr1, arr2) {
     var toString = Object.prototype.toString;
 
     // determine if arr1 and arr2 are array-like
